@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:animations/animations.dart';
+<<<<<<< HEAD
 import 'RegisterPage/RegisterPage1.dart';
 import 'RegisterPage/RegisterPage2.dart';
 import 'RegisterPage/RegisterPage3.dart';
@@ -14,6 +15,22 @@ import 'RegisterPage/RegisterPage7.dart';
 import 'Success.dart';
 
 import 'config.dart';
+=======
+import 'RegisterPage1.dart';
+import 'RegisterPage2.dart';
+import 'RegisterPage3.dart';
+import 'RegisterPage4.dart';
+import 'RegisterPage5.dart';
+import 'RegisterPage6.dart';
+import 'RegisterPage7.dart';
+import 'Success.dart';
+
+const String _defaultBaseUrl = kIsWeb
+    ? 'http://localhost:3000'
+    : 'http://10.0.2.2:3000';
+const String baseUrl =
+String.fromEnvironment('API_BASE', defaultValue: _defaultBaseUrl);
+>>>>>>> 5187ed4 (my first commit)
 
 class RegisterState {
   String? email;
@@ -23,6 +40,7 @@ class RegisterState {
   String? location;
   String? income;
 
+<<<<<<< HEAD
   // single‑value fields
   String  maritalStatus = '';
   String  education     = '';
@@ -31,6 +49,14 @@ class RegisterState {
   // multi‑value fields
   List<String> specialGroup     = [];
   List<String> interests        = [];
+=======
+  // 새 필드
+  String  maritalStatus = '';
+  String  education     = '';
+  String  major         = '';
+  List<String> specialGroup = [];
+  List<String> interests    = [];
+>>>>>>> 5187ed4 (my first commit)
 }
 
 class RegisterFlow extends StatefulWidget {
@@ -50,6 +76,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
     setState(() => _loading = true);
     try {
       final body = _buildSignupBody(_state);
+<<<<<<< HEAD
       final resp = await http
           .post(
         Uri.parse('$baseUrl/api/auth/signup'),
@@ -57,18 +84,30 @@ class _RegisterFlowState extends State<RegisterFlow> {
         body: jsonEncode(body),
       )
           .timeout(const Duration(seconds: 10));
+=======
+      final resp = await http.post(
+        Uri.parse('$baseUrl/api/signup'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(body),
+      );
+>>>>>>> 5187ed4 (my first commit)
 
       debugPrint('>>> REQUEST: ${jsonEncode(body)}');
       debugPrint('<<< RESPONSE: ${resp.statusCode} ${resp.body}');
 
       if (resp.statusCode == 201) {
         final json = jsonDecode(resp.body);
+<<<<<<< HEAD
         final nickname = json['nickname'] as String;
+=======
+        final nickname = json['nickname'] as String; // 서버가 항상 내려줌
+>>>>>>> 5187ed4 (my first commit)
 
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
+<<<<<<< HEAD
             builder: (_) => ClapAnimationPage(mode: 0, nickname: nickname),
           ),
         );
@@ -77,6 +116,17 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
       // 그 외 상태코드
       _showSnack('회원가입 실패 (${resp.statusCode}) - ${resp.body}');
+=======
+            builder: (_) => ClapAnimationPage(
+              mode: 0,
+              nickname: nickname,
+            ),
+          ),
+        );
+      } else {
+        _showSnack('회원가입 실패 (${resp.statusCode}) - ${resp.body}');
+      }
+>>>>>>> 5187ed4 (my first commit)
     } catch (e) {
       _showSnack('네트워크 오류: $e');
     } finally {
@@ -84,6 +134,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
     }
   }
 
+<<<<<<< HEAD
   Map<String, dynamic> _safeJson(String body) {
     try {
       final v = jsonDecode(body);
@@ -108,6 +159,23 @@ class _RegisterFlowState extends State<RegisterFlow> {
       "employmentStatus" : s.employmentStatus,      // NEW
       "specialGroup"     : s.specialGroup,
       "interests"        : s.interests,
+=======
+  Map<String, dynamic> _buildSignupBody(RegisterState s) {
+    return {
+      "email":          s.email          ?? '',
+      "nickname":       s.nickname       ?? '',
+      "password":       s.password       ?? '',
+      "birthDate":      s.birthDate != null
+          ? s.birthDate!.toIso8601String().split('T')[0]
+          : '2000-01-01',
+      "location":       s.location       ?? '서울특별시 강남구',
+      "income":         s.income         ?? '0',
+      "maritalStatus":  s.maritalStatus,
+      "education":      s.education,
+      "major":          s.major,
+      "specialGroup":   s.specialGroup,
+      "interests":      s.interests,
+>>>>>>> 5187ed4 (my first commit)
     };
   }
 

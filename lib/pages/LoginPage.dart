@@ -1,8 +1,13 @@
 import 'dart:convert';
+<<<<<<< HEAD
+=======
+import 'package:flutter/foundation.dart';
+>>>>>>> 5187ed4 (my first commit)
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'Success.dart'; // ClapAnimationPage 정의
+<<<<<<< HEAD
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'config.dart';
 
@@ -12,6 +17,13 @@ String.fromEnvironment('API_BASE', defaultValue: baseUrl);
 
 // secure storage 인스턴스
 final _storage = FlutterSecureStorage();
+=======
+
+const String _defaultBaseUrl = 'http://10.0.2.2:3000';
+
+const String baseUrl =
+String.fromEnvironment('API_BASE', defaultValue: _defaultBaseUrl);
+>>>>>>> 5187ed4 (my first commit)
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -144,6 +156,7 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _pwController = TextEditingController();
 
+<<<<<<< HEAD
   final _emailFieldKey = GlobalKey<_ShakingTextFormFieldState>();
   final _pwFieldKey = GlobalKey<_ShakingTextFormFieldState>();
 
@@ -152,6 +165,8 @@ class _LoginPageState extends State<LoginPage> {
 
   String? _globalError;
 
+=======
+>>>>>>> 5187ed4 (my first commit)
   bool _isLoading = false;
   bool _obscurePw = true;
 
@@ -159,6 +174,7 @@ class _LoginPageState extends State<LoginPage> {
   void dispose() {
     _emailController.dispose();
     _pwController.dispose();
+<<<<<<< HEAD
     _emailFocus.dispose();
     _pwFocus.dispose();
     super.dispose();
@@ -198,21 +214,50 @@ class _LoginPageState extends State<LoginPage> {
       DateTime.now().add(Duration(seconds: expiresIn)).toIso8601String();
       await _storage.write(key: 'access_token_exp', value: expiryAt);
     }
+=======
+    super.dispose();
+  }
+
+  bool _validate() {
+    final email = _emailController.text.trim();
+    final pw = _pwController.text;
+    if (email.isEmpty || !email.contains('@')) {
+      _showError('올바른 이메일을 입력하세요');
+      return false;
+    }
+    if (pw.length < 6) {
+      _showError('비밀번호는 6자 이상이어야 합니다');
+      return false;
+    }
+    return true;
+  }
+
+  void _showError(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
+>>>>>>> 5187ed4 (my first commit)
   }
 
   Future<void> _login() async {
     if (!_validate()) return;
 
+<<<<<<< HEAD
     setState(() {
       _isLoading = true;
       _globalError = null; // 제출 직전엔 초기화
     });
 
+=======
+    setState(() => _isLoading = true);
+>>>>>>> 5187ed4 (my first commit)
     try {
       final email = _emailController.text.trim();
       final password = _pwController.text;
 
       final resp = await http.post(
+<<<<<<< HEAD
         Uri.parse('$apiBase/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
@@ -223,6 +268,23 @@ class _LoginPageState extends State<LoginPage> {
         final nickname = json['nickname'] as String? ?? '';
 
         await _saveToken(json);
+=======
+        Uri.parse('$baseUrl/api/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': email,
+          'password': password,
+        }),
+      );
+
+      if (resp.statusCode == 200) {
+        final json = jsonDecode(resp.body);
+        final token = json['token'] as String;
+        final nickname = json['nickname'] as String? ?? '';
+
+        // TODO: token 저장 (secure storage 등)
+        // await storage.write(key: 'token', value: token);
+>>>>>>> 5187ed4 (my first commit)
 
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -232,6 +294,7 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       } else if (resp.statusCode == 401) {
+<<<<<<< HEAD
         // 서버 인증 실패 → 두 필드 모두 흔들기 + 공통 에러
         _emailFieldKey.currentState?.shake();
         _pwFieldKey.currentState?.shake();
@@ -247,11 +310,20 @@ class _LoginPageState extends State<LoginPage> {
       setState(() {
         _globalError = '네트워크 오류: $e';
       });
+=======
+        _showError('로그인 실패 (401)');
+      } else {
+        _showError('로그인 실패 (${resp.statusCode}) - ${resp.body}');
+      }
+    } catch (e) {
+      _showError('네트워크 오류: $e');
+>>>>>>> 5187ed4 (my first commit)
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
+<<<<<<< HEAD
   String? _emailValidator(String? v) {
     final value = (v ?? '').trim();
     if (value.isEmpty) return 'empty';
@@ -265,6 +337,8 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
+=======
+>>>>>>> 5187ed4 (my first commit)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -279,6 +353,7 @@ class _LoginPageState extends State<LoginPage> {
             16,
             MediaQuery.of(context).viewInsets.bottom + 24,
           ),
+<<<<<<< HEAD
           child: Form(
             key: _formKey,
             autovalidateMode: AutovalidateMode.disabled,
@@ -313,6 +388,65 @@ class _LoginPageState extends State<LoginPage> {
                     onPressed: () {
                       setState(() => _obscurePw = !_obscurePw);
                     },
+=======
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: '이메일',
+                ),
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _pwController,
+                decoration: InputDecoration(
+                  labelText: '비밀번호',
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePw ? Icons.visibility : Icons.visibility_off,
+                    ),
+                    onPressed: () {
+                      setState(() => _obscurePw = !_obscurePw);
+                    },
+                  ),
+                ),
+                obscureText: _obscurePw,
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => _login(),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: _isLoading ? null : _login,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4263EB),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  )
+                      : const Text(
+                    '로그인',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+>>>>>>> 5187ed4 (my first commit)
                   ),
                 ),
 

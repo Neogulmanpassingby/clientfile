@@ -41,7 +41,10 @@ dependencies:
   shimmer: ^2.0.0
   intl: ^0.20.2
   http: ^1.2.0
+<<<<<<< HEAD
   flutter_secure_storage: ^9.2.2
+=======
+>>>>>>> 5187ed4 (my first commit)
 
 dev_dependencies:
   flutter_test:
