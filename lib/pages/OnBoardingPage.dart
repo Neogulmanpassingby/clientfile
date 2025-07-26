@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'LoginPage.dart';
-import 'RegisterPage1.dart';
+import 'RegisterFlow.dart'; // 변경: RegisterPage1 → RegisterFlow
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -16,9 +16,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   void initState() {
     super.initState();
     Future.delayed(const Duration(milliseconds: 300), () {
-      setState(() {
-        _opacity = 1.0;
-      });
+      setState(() => _opacity = 1.0);
     });
   }
 
@@ -75,9 +73,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () {
+                          // RegisterPage1이 아닌 RegisterFlow로 진입
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => const RegisterPage()),
+                            MaterialPageRoute(
+                              builder: (context) => const RegisterFlow(),
+                            ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
@@ -90,7 +91,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           '시작하기',
                           style: TextStyle(
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFFFFFFFF),
+                            color: Colors.white,
                             fontSize: 16,
                           ),
                         ),
@@ -111,7 +112,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           onTap: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (context) => const LoginPage()),
+                              MaterialPageRoute(
+                                builder: (context) => const LoginPage(),
+                              ),
                             );
                           },
                           child: const Text(

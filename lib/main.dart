@@ -9,6 +9,8 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  static const Color primaryColor = Color(0xFF4263EB);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -16,28 +18,37 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Pretendard',
+        colorScheme: ColorScheme.fromSeed(seedColor: primaryColor),
+        useMaterial3: true,
         inputDecorationTheme: const InputDecorationTheme(
-          // TextField 밑줄·아웃라인 기본값 커스텀
           focusedBorder: UnderlineInputBorder(
-            borderSide: BorderSide(color: Color(0xFF4263EB), width: 2),
+            borderSide: BorderSide(color: primaryColor, width: 2),
           ),
         ),
-        textSelectionTheme: TextSelectionThemeData(
-          cursorColor: Color(0xFF4263EB),
-          selectionColor: Color(0xFF4263EB),
-          selectionHandleColor: Color(0xFF4263EB),
+        textSelectionTheme: const TextSelectionThemeData(
+          cursorColor: primaryColor,
+          selectionColor: primaryColor,
+          selectionHandleColor: primaryColor,
+        ),
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          selectedItemColor: primaryColor,
+          unselectedItemColor: Colors.grey,
         ),
       ),
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      supportedLocales: const [
-        Locale('ko', 'KR'),
-        Locale('en', 'US'),
-      ],
+      localizationsDelegates: _localizationDelegates,
+      supportedLocales: _supportedLocales,
       home: const OnboardingPage(),
     );
   }
+
+  static const _localizationDelegates = [
+    GlobalMaterialLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+  ];
+
+  static const _supportedLocales = [
+    Locale('ko', 'KR'),
+    Locale('en', 'US'),
+  ];
 }
