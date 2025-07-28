@@ -17,7 +17,7 @@ class _RegisterPage7State extends State<RegisterPage7> {
   // 카테고리::옵션 형태의 고유 키를 저장
   final Set<String> selectedKeys = {};
   // 단일 선택 처리할 카테고리
-  final Set<String> singleSelectCategories = {'혼인 여부','최종 학력', '전공'};
+  final Set<String> singleSelectCategories = {'혼인 여부','최종 학력', '전공', '취업상태'};
 
   Widget buildOption(String category, String title) {
     final key = '$category::$title';

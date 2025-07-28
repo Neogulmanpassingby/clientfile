@@ -4,13 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:animations/animations.dart';
-import 'RegisterPage1.dart';
-import 'RegisterPage2.dart';
-import 'RegisterPage3.dart';
-import 'RegisterPage4.dart';
-import 'RegisterPage5.dart';
-import 'RegisterPage6.dart';
-import 'RegisterPage7.dart';
+import 'RegisterPage/RegisterPage1.dart';
+import 'RegisterPage/RegisterPage2.dart';
+import 'RegisterPage/RegisterPage3.dart';
+import 'RegisterPage/RegisterPage4.dart';
+import 'RegisterPage/RegisterPage5.dart';
+import 'RegisterPage/RegisterPage6.dart';
+import 'RegisterPage/RegisterPage7.dart';
 import 'Success.dart';
 
 import 'config.dart';
@@ -27,9 +27,8 @@ class RegisterState {
   String  maritalStatus = '';
   String  education     = '';
   String  major         = '';
-
+  String employmentStatus = '';
   // multi‑value fields
-  List<String> employmentStatus = [];   // NEW
   List<String> specialGroup     = [];
   List<String> interests        = [];
 }
@@ -53,7 +52,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
       final body = _buildSignupBody(_state);
       final resp = await http
           .post(
-        Uri.parse('$baseUrl/api/signup'),
+        Uri.parse('$baseUrl/api/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
       )
