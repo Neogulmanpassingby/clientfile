@@ -1,5 +1,9 @@
+// register_page1.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'config.dart';
 
 class RegisterPage1 extends StatefulWidget {
   final void Function(String email) onNext;
@@ -41,6 +45,10 @@ class _RegisterPage1State extends State<RegisterPage1>
   bool _showError = false; // blur/submit 에서만 true
   bool _isValid = false;   // 내부적으로만 쓰고, 버튼은 항상 enable
 
+  // 서버 중복확인용
+  bool _checking = false;
+  String? _serverError;
+
   // '@domain.tld' 형태를 강제(서브도메인 허용)
   final _emailRe = RegExp(
     r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$",
@@ -60,6 +68,47 @@ class _RegisterPage1State extends State<RegisterPage1>
     });
     if (shakeIfError && !ok) {
       _shakeController.forward(from: 0);
+    }
+  }
+
+  Future<bool> _checkEmailOnServer(String email) async {
+    setState(() {
+      _checking = true;
+      _serverError = null;
+    });
+
+    try {
+      final resp = await http
+          .get(Uri.parse('$baseUrl/api/auth/check-email?email=$email'))
+          .timeout(const Duration(seconds: 5));
+
+      if (resp.statusCode != 200) {
+        setState(() {
+          _serverError = '중복 확인 실패 (${resp.statusCode})';
+        });
+        return false;
+      }
+
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      final exists = (body['data']?['exists'] ?? false) as bool;
+
+      if (exists) {
+        setState(() {
+          _serverError = '이미 가입된 이메일입니다.';
+        });
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      setState(() {
+        _serverError = '네트워크 오류: $e';
+      });
+      return false;
+    } finally {
+      if (mounted) {
+        setState(() => _checking = false);
+      }
     }
   }
 
@@ -141,10 +190,20 @@ class _RegisterPage1State extends State<RegisterPage1>
                         width: 2,
                       ),
                     ),
+                    suffixIcon: _checking
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                        : null,
                   ),
                   onChanged: (v) {
-                    // 입력 중엔 메시지 숨김 (토스 스타일), 내부 valid만 갱신
                     _showError = false;
+                    _serverError = null;
                     _validate(showMessage: false, shakeIfError: false);
                   },
                   onEditingComplete: () {
@@ -154,11 +213,11 @@ class _RegisterPage1State extends State<RegisterPage1>
                 ),
               ),
 
-              if (_showError)
+              if (_showError || _serverError != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    '이메일 형식이 올바르지 않아요.',
+                    _serverError ?? '이메일 형식이 올바르지 않아요.',
                     style: TextStyle(color: Colors.red.shade600, fontSize: 14),
                   ),
                 ),
@@ -169,11 +228,19 @@ class _RegisterPage1State extends State<RegisterPage1>
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  // 항상 활성화
-                  onPressed: () {
+                  onPressed: () async {
                     _validate(showMessage: true, shakeIfError: true);
-                    if (_isValid) {
+                    if (!_isValid) {
+                      _shakeController.forward(from: 0);
+                      return;
+                    }
+
+                    final ok = await _checkEmailOnServer(_controller.text.trim());
+                    if (ok) {
                       widget.onNext(_controller.text.trim());
+                    } else {
+                      _shakeController.forward(from: 0);
+                      setState(() => _showError = true);
                     }
                   },
                   style: ElevatedButton.styleFrom(

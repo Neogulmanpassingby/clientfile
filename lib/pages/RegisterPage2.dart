@@ -1,4 +1,9 @@
+// register_page2.dart
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+import 'config.dart'; // baseUrl 정의되어 있다고 가정 (ex. const baseUrl = ...);
 
 class RegisterPage2 extends StatefulWidget {
   final void Function(String nickname) onNext;
@@ -23,8 +28,10 @@ class _RegisterPage2State extends State<RegisterPage2>
     '씨발', '병신', '지랄', '개새', '좆', '씹', '개년', '육시랄',
   };
 
-  bool _showError = false; // blur/submit 때만 true
-  bool _isValid = false;   // 내부적으로만 사용 (버튼은 항상 enable)
+  bool _showError = false;   // blur/submit 때만 true
+  bool _isValid = false;     // 클라이언트 측 기본 유효성
+  bool _checking = false;    // 서버 중복 확인 로딩 표시
+  String? _serverError;      // 서버에서 온 에러 or 중복 메시지
 
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnimation;
@@ -82,9 +89,43 @@ class _RegisterPage2State extends State<RegisterPage2>
     setState(() {
       _isValid = ok;
       if (showMessage) _showError = !ok;
+      if (ok) _serverError = null; // 클라 검증 통과 시 이전 서버 에러는 지움
     });
     if (shakeIfError && !ok) {
       _shakeController.forward(from: 0);
+    }
+  }
+
+  Future<bool> _checkNicknameOnServer(String nickname) async {
+    setState(() {
+      _checking = true;
+      _serverError = null;
+    });
+
+    try {
+      final resp = await http
+          .get(Uri.parse('$baseUrl/api/auth/check-nickname?nickname=$nickname'))
+          .timeout(const Duration(seconds: 5));
+
+      if (resp.statusCode != 200) {
+        setState(() => _serverError = '중복 확인 실패 (${resp.statusCode})');
+        return false;
+      }
+
+      final body = jsonDecode(resp.body) as Map<String, dynamic>;
+      final exists = (body['data']?['exists'] ?? false) as bool;
+
+      if (exists) {
+        setState(() => _serverError = '이미 사용 중인 닉네임입니다.');
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      setState(() => _serverError = '네트워크 오류: $e');
+      return false;
+    } finally {
+      if (mounted) setState(() => _checking = false);
     }
   }
 
@@ -126,14 +167,26 @@ class _RegisterPage2State extends State<RegisterPage2>
                     ),
                     focusedBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
-                        color: _showError ? Colors.red : const Color(0xFF4263EB),
+                        color: (_showError || _serverError != null)
+                            ? Colors.red
+                            : const Color(0xFF4263EB),
                         width: 2,
                       ),
                     ),
+                    suffixIcon: _checking
+                        ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: Padding(
+                        padding: EdgeInsets.all(10),
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                        : null,
                   ),
                   onChanged: (_) {
-                    // 입력 중엔 메시지 숨기고(토스 스타일), 내부 valid만 갱신
                     _showError = false;
+                    _serverError = null;
                     _validate(showMessage: false, shakeIfError: false);
                   },
                   onEditingComplete: () {
@@ -143,11 +196,12 @@ class _RegisterPage2State extends State<RegisterPage2>
                 ),
               ),
 
-              if (_showError)
+              if (_showError || _serverError != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    '욕설이 포함되어 있어요. 다른 별명을 입력해 주세요.',
+                    _serverError ??
+                        '욕설이 포함되어 있어요. 다른 별명을 입력해 주세요.',
                     style: TextStyle(color: Colors.red.shade600, fontSize: 14),
                   ),
                 ),
@@ -158,11 +212,20 @@ class _RegisterPage2State extends State<RegisterPage2>
                 width: double.infinity,
                 height: 50,
                 child: ElevatedButton(
-                  // 항상 활성화
-                  onPressed: () {
+                  onPressed: () async {
                     _validate(showMessage: true, shakeIfError: true);
-                    if (_isValid) {
+                    if (!_isValid) {
+                      _shakeController.forward(from: 0);
+                      return;
+                    }
+
+                    final ok =
+                    await _checkNicknameOnServer(_controller.text.trim());
+                    if (ok) {
                       widget.onNext(_controller.text.trim());
+                    } else {
+                      _shakeController.forward(from: 0);
+                      setState(() => _showError = true);
                     }
                   },
                   style: ElevatedButton.styleFrom(

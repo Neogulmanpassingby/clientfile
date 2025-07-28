@@ -13,11 +13,7 @@ import 'RegisterPage6.dart';
 import 'RegisterPage7.dart';
 import 'Success.dart';
 
-const String _defaultBaseUrl = kIsWeb
-    ? 'http://localhost:3000'
-    : 'http://10.0.2.2:3000';
-const String baseUrl =
-String.fromEnvironment('API_BASE', defaultValue: _defaultBaseUrl);
+import 'config.dart';
 
 class RegisterState {
   String? email;
@@ -27,12 +23,15 @@ class RegisterState {
   String? location;
   String? income;
 
-  // 새 필드
+  // single‑value fields
   String  maritalStatus = '';
   String  education     = '';
   String  major         = '';
-  List<String> specialGroup = [];
-  List<String> interests    = [];
+
+  // multi‑value fields
+  List<String> employmentStatus = [];   // NEW
+  List<String> specialGroup     = [];
+  List<String> interests        = [];
 }
 
 class RegisterFlow extends StatefulWidget {
@@ -52,32 +51,33 @@ class _RegisterFlowState extends State<RegisterFlow> {
     setState(() => _loading = true);
     try {
       final body = _buildSignupBody(_state);
-      final resp = await http.post(
+      final resp = await http
+          .post(
         Uri.parse('$baseUrl/api/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(body),
-      );
+      )
+          .timeout(const Duration(seconds: 10));
 
       debugPrint('>>> REQUEST: ${jsonEncode(body)}');
       debugPrint('<<< RESPONSE: ${resp.statusCode} ${resp.body}');
 
       if (resp.statusCode == 201) {
         final json = jsonDecode(resp.body);
-        final nickname = json['nickname'] as String; // 서버가 항상 내려줌
+        final nickname = json['nickname'] as String;
 
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (_) => ClapAnimationPage(
-              mode: 0,
-              nickname: nickname,
-            ),
+            builder: (_) => ClapAnimationPage(mode: 0, nickname: nickname),
           ),
         );
-      } else {
-        _showSnack('회원가입 실패 (${resp.statusCode}) - ${resp.body}');
+        return;
       }
+
+      // 그 외 상태코드
+      _showSnack('회원가입 실패 (${resp.statusCode}) - ${resp.body}');
     } catch (e) {
       _showSnack('네트워크 오류: $e');
     } finally {
@@ -85,21 +85,30 @@ class _RegisterFlowState extends State<RegisterFlow> {
     }
   }
 
+  Map<String, dynamic> _safeJson(String body) {
+    try {
+      final v = jsonDecode(body);
+      if (v is Map<String, dynamic>) return v;
+    } catch (_) {}
+    return {};
+  }
+
   Map<String, dynamic> _buildSignupBody(RegisterState s) {
     return {
-      "email":          s.email          ?? '',
-      "nickname":       s.nickname       ?? '',
-      "password":       s.password       ?? '',
-      "birthDate":      s.birthDate != null
+      "email"            : s.email          ?? '',
+      "nickname"         : s.nickname       ?? '',
+      "password"         : s.password       ?? '',
+      "birthDate"        : s.birthDate != null
           ? s.birthDate!.toIso8601String().split('T')[0]
           : '2000-01-01',
-      "location":       s.location       ?? '서울특별시 강남구',
-      "income":         s.income         ?? '0',
-      "maritalStatus":  s.maritalStatus,
-      "education":      s.education,
-      "major":          s.major,
-      "specialGroup":   s.specialGroup,
-      "interests":      s.interests,
+      "location"         : s.location       ?? '서울특별시 강남구',
+      "income"           : s.income         ?? '0',
+      "maritalStatus"    : s.maritalStatus,
+      "education"        : s.education,
+      "major"            : s.major,
+      "employmentStatus" : s.employmentStatus,      // NEW
+      "specialGroup"     : s.specialGroup,
+      "interests"        : s.interests,
     };
   }
 
