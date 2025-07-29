@@ -1,29 +1,13 @@
 import 'dart:convert';
-<<<<<<< HEAD
-=======
-import 'package:flutter/foundation.dart';
->>>>>>> 5187ed4 (my first commit)
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
-import 'Success.dart'; // ClapAnimationPage 정의
-<<<<<<< HEAD
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'Success.dart';
 import 'config.dart';
 
 // 환경변수 우선, 없으면 config.dart의 baseUrl 사용
-const String apiBase =
-String.fromEnvironment('API_BASE', defaultValue: baseUrl);
-
-// secure storage 인스턴스
+const String apiBase = String.fromEnvironment('API_BASE', defaultValue: baseUrl);
 final _storage = FlutterSecureStorage();
-=======
-
-const String _defaultBaseUrl = 'http://10.0.2.2:3000';
-
-const String baseUrl =
-String.fromEnvironment('API_BASE', defaultValue: _defaultBaseUrl);
->>>>>>> 5187ed4 (my first commit)
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -33,9 +17,7 @@ class LoginPage extends StatefulWidget {
 }
 
 /// ─────────────────────────────────────────────────────────────────
-///  ShakingTextFormField : 잘못된 입력 시 좌우로 흔들리는 TextFormField
-///  - validator에서 에러가 나면 자동으로 shake()
-///  - TextFormField 자체 errorText는 숨김(errorStyle.height = 0)
+///  ShakingTextFormField
 /// ─────────────────────────────────────────────────────────────────
 class ShakingTextFormField extends StatefulWidget {
   final TextEditingController controller;
@@ -73,9 +55,7 @@ class _ShakingTextFormFieldState extends State<ShakingTextFormField>
   @override
   void initState() {
     super.initState();
-    _controller =
-        AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
-
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
     _offsetX = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0, end: -12), weight: 1),
       TweenSequenceItem(tween: Tween(begin: -12, end: 12), weight: 2),
@@ -85,9 +65,7 @@ class _ShakingTextFormFieldState extends State<ShakingTextFormField>
     ]).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
-  void shake() {
-    _controller.forward(from: 0);
-  }
+  void shake() => _controller.forward(from: 0);
 
   @override
   void dispose() {
@@ -97,10 +75,7 @@ class _ShakingTextFormFieldState extends State<ShakingTextFormField>
 
   String? _wrappedValidator(String? v) {
     final res = widget.validator?.call(v);
-    if (res != null) {
-      // validator 실패 시 흔들림
-      shake();
-    }
+    if (res != null) shake();
     return res;
   }
 
@@ -123,16 +98,12 @@ class _ShakingTextFormFieldState extends State<ShakingTextFormField>
               labelText: widget.label,
               suffixIcon: widget.suffixIcon,
               errorStyle: const TextStyle(height: 0, fontSize: 0),
-
-              // 기본/포커스 보더도 명시해서 테마 영향 배제
               enabledBorder: const UnderlineInputBorder(
                 borderSide: BorderSide(color: Color(0xFFBDBDBD), width: 1.0),
               ),
               focusedBorder: const UnderlineInputBorder(
                 borderSide: BorderSide(color: Color(0xFF4263EB), width: 1.4),
               ),
-
-              // 🔴 에러일 때 보더
               errorBorder: const UnderlineInputBorder(
                 borderSide: BorderSide(color: Color(0xFFD32F2F), width: 1.2),
               ),
@@ -148,53 +119,37 @@ class _ShakingTextFormFieldState extends State<ShakingTextFormField>
 }
 
 /// ─────────────────────────────────────────────────────────────────
-///  LoginPage
+///  LoginPage State
 /// ─────────────────────────────────────────────────────────────────
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-
   final _emailController = TextEditingController();
   final _pwController = TextEditingController();
 
-<<<<<<< HEAD
   final _emailFieldKey = GlobalKey<_ShakingTextFormFieldState>();
   final _pwFieldKey = GlobalKey<_ShakingTextFormFieldState>();
-
   final _emailFocus = FocusNode();
   final _pwFocus = FocusNode();
 
-  String? _globalError;
-
-=======
->>>>>>> 5187ed4 (my first commit)
   bool _isLoading = false;
   bool _obscurePw = true;
+  String? _globalError;
 
   @override
   void dispose() {
     _emailController.dispose();
     _pwController.dispose();
-<<<<<<< HEAD
     _emailFocus.dispose();
     _pwFocus.dispose();
     super.dispose();
   }
 
-  /// 클라이언트 사이드 밸리데이션
   bool _validate() {
     _globalError = null;
-
-    // validator들이 실행된다. (에러 텍스트는 숨기지만, 실패 여부는 bool로 리턴)
     final ok = _formKey.currentState?.validate() ?? false;
-
     if (!ok) {
-      // Form validator에서 위젯이 알아서 흔들림 (ShakingTextFormField 내부)
-      // 사용자에게는 하나의 문구만 보여준다.
-      setState(() {
-        _globalError = '입력한 정보를 다시 확인해주세요';
-      });
+      setState(() => _globalError = '입력한 정보를 다시 확인해주세요');
     }
-
     return ok;
   }
 
@@ -210,54 +165,24 @@ class _LoginPageState extends State<LoginPage> {
       await _storage.write(key: 'refresh_token', value: refreshToken);
     }
     if (expiresIn != null) {
-      final expiryAt =
-      DateTime.now().add(Duration(seconds: expiresIn)).toIso8601String();
+      final expiryAt = DateTime.now().add(Duration(seconds: expiresIn)).toIso8601String();
       await _storage.write(key: 'access_token_exp', value: expiryAt);
     }
-=======
-    super.dispose();
-  }
-
-  bool _validate() {
-    final email = _emailController.text.trim();
-    final pw = _pwController.text;
-    if (email.isEmpty || !email.contains('@')) {
-      _showError('올바른 이메일을 입력하세요');
-      return false;
-    }
-    if (pw.length < 6) {
-      _showError('비밀번호는 6자 이상이어야 합니다');
-      return false;
-    }
-    return true;
-  }
-
-  void _showError(String msg) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
->>>>>>> 5187ed4 (my first commit)
   }
 
   Future<void> _login() async {
     if (!_validate()) return;
 
-<<<<<<< HEAD
     setState(() {
       _isLoading = true;
-      _globalError = null; // 제출 직전엔 초기화
+      _globalError = null;
     });
 
-=======
-    setState(() => _isLoading = true);
->>>>>>> 5187ed4 (my first commit)
     try {
       final email = _emailController.text.trim();
       final password = _pwController.text;
 
       final resp = await http.post(
-<<<<<<< HEAD
         Uri.parse('$apiBase/api/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
@@ -266,25 +191,7 @@ class _LoginPageState extends State<LoginPage> {
       if (resp.statusCode == 200) {
         final json = jsonDecode(resp.body) as Map<String, dynamic>;
         final nickname = json['nickname'] as String? ?? '';
-
         await _saveToken(json);
-=======
-        Uri.parse('$baseUrl/api/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
-      );
-
-      if (resp.statusCode == 200) {
-        final json = jsonDecode(resp.body);
-        final token = json['token'] as String;
-        final nickname = json['nickname'] as String? ?? '';
-
-        // TODO: token 저장 (secure storage 등)
-        // await storage.write(key: 'token', value: token);
->>>>>>> 5187ed4 (my first commit)
 
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -294,36 +201,19 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
       } else if (resp.statusCode == 401) {
-<<<<<<< HEAD
-        // 서버 인증 실패 → 두 필드 모두 흔들기 + 공통 에러
         _emailFieldKey.currentState?.shake();
         _pwFieldKey.currentState?.shake();
-        setState(() {
-          _globalError = '이메일 또는 비밀번호가 올바르지 않아요.';
-        });
+        setState(() => _globalError = '이메일 또는 비밀번호가 올바르지 않아요.');
       } else {
-        setState(() {
-          _globalError = '로그인 실패 (${resp.statusCode})';
-        });
+        setState(() => _globalError = '로그인 실패 (${resp.statusCode})');
       }
     } catch (e) {
-      setState(() {
-        _globalError = '네트워크 오류: $e';
-      });
-=======
-        _showError('로그인 실패 (401)');
-      } else {
-        _showError('로그인 실패 (${resp.statusCode}) - ${resp.body}');
-      }
-    } catch (e) {
-      _showError('네트워크 오류: $e');
->>>>>>> 5187ed4 (my first commit)
+      setState(() => _globalError = '네트워크 오류: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-<<<<<<< HEAD
   String? _emailValidator(String? v) {
     final value = (v ?? '').trim();
     if (value.isEmpty) return 'empty';
@@ -337,8 +227,6 @@ class _LoginPageState extends State<LoginPage> {
     return null;
   }
 
-=======
->>>>>>> 5187ed4 (my first commit)
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -353,12 +241,10 @@ class _LoginPageState extends State<LoginPage> {
             16,
             MediaQuery.of(context).viewInsets.bottom + 24,
           ),
-<<<<<<< HEAD
           child: Form(
             key: _formKey,
             autovalidateMode: AutovalidateMode.disabled,
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ShakingTextFormField(
@@ -382,75 +268,10 @@ class _LoginPageState extends State<LoginPage> {
                   onFieldSubmitted: (_) => _login(),
                   validator: _passwordValidator,
                   suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePw ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() => _obscurePw = !_obscurePw);
-                    },
-=======
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: _emailController,
-                decoration: const InputDecoration(
-                  labelText: '이메일',
-                ),
-                keyboardType: TextInputType.emailAddress,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _pwController,
-                decoration: InputDecoration(
-                  labelText: '비밀번호',
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePw ? Icons.visibility : Icons.visibility_off,
-                    ),
-                    onPressed: () {
-                      setState(() => _obscurePw = !_obscurePw);
-                    },
+                    icon: Icon(_obscurePw ? Icons.visibility : Icons.visibility_off),
+                    onPressed: () => setState(() => _obscurePw = !_obscurePw),
                   ),
                 ),
-                obscureText: _obscurePw,
-                textInputAction: TextInputAction.done,
-                onSubmitted: (_) => _login(),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4263EB),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                  ),
-                  child: _isLoading
-                      ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: Colors.white,
-                    ),
-                  )
-                      : const Text(
-                    '로그인',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
->>>>>>> 5187ed4 (my first commit)
-                  ),
-                ),
-
-                // ✅ 공통 에러 한 줄만 표시
                 const SizedBox(height: 4),
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 200),

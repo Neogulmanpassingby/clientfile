@@ -1,10 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.untitled1">
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 5187ed4 (my first commit)
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
