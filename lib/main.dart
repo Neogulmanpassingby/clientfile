@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
       ),
       localizationsDelegates: _localizationDelegates,
       supportedLocales: _supportedLocales,
-      home: const MainPage(),
+      home: const OnboardingPage(),
     );
   }
 

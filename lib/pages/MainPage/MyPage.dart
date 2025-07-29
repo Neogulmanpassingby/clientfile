@@ -13,12 +13,16 @@ class MyPage extends StatelessWidget {
     const favorites = ["아이템 1", "아이템 2", "아이템 3"];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('마이페이지')),
-      backgroundColor: const Color(0xFFF7F8FA), // Toss 스타일 배경
+      appBar: AppBar(
+        title: const Text('마이페이지'),
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        elevation: 1,
+      ),
+      backgroundColor: const Color(0xFFF7F8FA),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // 프로필 카드
           _tossCard(
             child: Row(
               children: [
@@ -31,7 +35,9 @@ class MyPage extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(nickname, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    Text(nickname,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                     Text(email, style: const TextStyle(color: Colors.grey)),
                   ],
@@ -39,15 +45,14 @@ class MyPage extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
-          // 개인정보 카드
           _tossCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text("내 정보", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text("내 정보",
+                    style:
+                    TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 16),
                 _infoRow("닉네임", nickname),
                 _infoRow("생년월일", birthDate),
@@ -56,25 +61,23 @@ class MyPage extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   height: 50,
-                  child:ElevatedButton(
+                  child: ElevatedButton(
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                        MaterialPageRoute(
+                            builder: (_) => const EditProfilePage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4263EB),
                       foregroundColor: Colors.white,
-                      minimumSize: const Size.fromHeight(44),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12), // 더 부드럽고 예쁨
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 0,
                       textStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                          fontSize: 16, fontWeight: FontWeight.w600),
                     ),
                     child: const Text("내 정보 수정"),
                   ),
@@ -84,9 +87,7 @@ class MyPage extends StatelessWidget {
           ),
 
           const SizedBox(height: 16),
-
-          // 관심 정보
-          _tossCard(
+          /*_tossCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -94,27 +95,23 @@ class MyPage extends StatelessWidget {
                   children: [
                     Icon(Icons.star, color: Colors.amber),
                     SizedBox(width: 8),
-                    Text("관심 정보", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    Text("관심 정보",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                   ],
                 ),
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: favorites.map((item) {
-                    return Chip(
-                      avatar: const Icon(Icons.star, color: Colors.orange, size: 16),
-                      label: Text(item),
-                      backgroundColor: Colors.orange[50],
-                      shape: StadiumBorder(
-                        side: BorderSide(color: Colors.orange.shade200),
-                      ),
-                    );
-                  }).toList(),
+                const SizedBox(height: 12),
+                ...favorites.map(
+                      (item) => ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.star, color: Colors.orange),
+                    title: Text(item),
+                  ),
                 ),
               ],
             ),
-          ),
+          ),*/
         ],
       ),
     );
@@ -143,7 +140,9 @@ class MyPage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          SizedBox(width: 80, child: Text(label, style: const TextStyle(color: Colors.grey))),
+          SizedBox(
+              width: 80,
+              child: Text(label, style: const TextStyle(color: Colors.grey))),
           const SizedBox(width: 10),
           Expanded(child: Text(value)),
         ],
