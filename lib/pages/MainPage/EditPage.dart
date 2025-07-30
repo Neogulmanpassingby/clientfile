@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../config.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -9,32 +13,35 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final TextEditingController _emailController = TextEditingController(text: "hong@test.com");
-  final TextEditingController _nicknameController = TextEditingController(text: "길동이");
-  final TextEditingController _incomeController = TextEditingController(text: "3,000,000");
+  final _emailController = TextEditingController();
+  final _nicknameController = TextEditingController();
+  final _birthDateController = TextEditingController();
+  final _incomeController = TextEditingController();
+  final _formatter = NumberFormat('#,###');
+  final _storage = FlutterSecureStorage();
 
-  final NumberFormat _formatter = NumberFormat('#,###');
-  String? _selectedLocation;
+  DateTime? _selectedBirthDate;
   String? _selectedSido;
   String? _selectedSigungu;
-  String? _selectedCityGu;  
+  String? _selectedCityGu;
+  String? _selectedLocation;
   Map<String, List<String>> _selectedTags = {};
 
-  final Set<String> singleSelectCategories = {'혼인 여부', '최종 학력', '전공', '취업상태'};
-  final Map<String, List<String>> options = {
+  bool _isLoading = true;
+
+  final Set<String> _singleSelectCategories = {'혼인 여부', '최종 학력', '전공', '취업 상태'};
+  final Map<String, List<String>> _options = {
     '혼인 여부': ['기혼', '미혼'],
     '최종 학력': ['고졸 미만', '고교 재학', '고교 졸업', '대학 재학', '대졸 예정', '대학 졸업', '대학 석/박사'],
     '전공': ['인문계열', '사회계열', '상경계열', '이학계열', '공학계열', '예체능계열', '농산업계열', '기타'],
-    '취업상태': ['재직자', '자영업자', '미취업자', '프리랜서', '일용근로자', '(예비)창업자', '단기근로자', '영농종사자', '기타'],
-    '특화분야': ['중소기업', '여성', '기초생활수급자', '한부모가정', '장애인', '농업인', '군인', '지역인재', '기타'],
-    '관심분야': [
-      '대출', '보조금', '바우처', '금리혜택', '교육지원', '맞춤형상담서비스',
+    '취업 상태': ['재직자', '자영업자', '미취업자', '프리랜서', '일용근로자', '(예비)창업자', '단기근로자', '영농종사자', '기타'],
+    '특화 분야': ['중소기업', '여성', '기초생활수급자', '한부모가정', '장애인', '농업인', '군인', '지역인재', '기타'],
+    '관심 분야': ['대출', '보조금', '바우처', '금리혜택', '교육지원', '맞춤형상담서비스',
       '인턴', '벤처', '중소기업', '청년가장', '장기미취업청년', '공공임대주택',
-      '신용회복', '육아', '출산', '해외진출', '주거지원',
-    ],
+      '신용회복', '육아', '출산', '해외진출', '주거지원',],
   };
 
-  static const Map<String, List<String>> _sidoSigungu = {
+  final Map<String, List<String>> _sidoSigungu = {
     '서울특별시': [
       '종로구', '중구', '용산구', '성동구', '광진구', '동대문구', '중랑구', '성북구',
       '강북구', '도봉구', '노원구', '은평구', '서대문구', '마포구', '양천구', '강서구',
@@ -96,8 +103,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     ],
     '제주특별자치도': ['제주시', '서귀포시'],
   };
-
-  static const Map<String, List<String>> kCityGu = {
+  final Map<String, List<String>> kCityGu = {
     '인천시': ['중구', '동구', '남구', '북구'],
     '수원시': ['장안구', '권선구', '팔달구', '영통구'],
     '성남시': ['수정구', '중원구', '분당구'],
@@ -118,22 +124,78 @@ class _EditProfilePageState extends State<EditProfilePage> {
     '마산시': ['합포구', '회원구'],
   };
 
-  void _updateLocationString() {
-    if (_selectedSido != null && _selectedSigungu != null) {
-      if (kCityGu.containsKey(_selectedSigungu) && _selectedCityGu != null) {
-        _selectedLocation = '$_selectedSido $_selectedSigungu $_selectedCityGu';
-      } else if (!kCityGu.containsKey(_selectedSigungu)) {
-        _selectedLocation = '$_selectedSido $_selectedSigungu';
-      }
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserInfo();
+  }
+
+  Future<void> _fetchUserInfo() async {
+    final token = await _storage.read(key: 'access_token');
+    final res = await http.get(Uri.parse('$baseUrl/api/mypage/detail'), headers: {
+      'Authorization': 'Bearer $token',
+    });
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      setState(() {
+        _emailController.text = data['email'] ?? '';
+        _nicknameController.text = data['nickname'] ?? '';
+
+        final rawBirth = data['birthDate'] ?? '';
+        if (rawBirth.isNotEmpty) {
+          DateTime? parsed = DateTime.tryParse(rawBirth);
+          if (parsed != null) {
+            _selectedBirthDate = parsed;
+            _birthDateController.text = DateFormat('yyyy-MM-dd').format(parsed);
+          }
+        }
+
+        final rawIncome = data['income']?.toString().replaceAll(',', '') ?? '0';
+        _incomeController.text = _formatter.format(int.tryParse(rawIncome) ?? 0);
+
+        final loc = (data['location'] ?? '').split(' ');
+        if (loc.length >= 2) {
+          _selectedSido = loc[0];
+          _selectedSigungu = loc[1];
+        }
+        if (loc.length == 3) _selectedCityGu = loc[2];
+        _updateLocationString();
+
+        final tagMap = data['tags'] as Map<String, dynamic>? ?? {};
+
+        _selectedTags = {};
+        tagMap.forEach((k, v) {
+          if (v is List) {
+            _selectedTags[k] = List<String>.from(v);
+          } else if (v is String && v.isNotEmpty) {
+            _selectedTags[k] = [v];
+          } else {
+            _selectedTags[k] = [];
+          }
+        });
+
+// 싱글‑셀렉트 카테고리가 null 로 남지 않게 보정(선택 안 된 경우 빈 리스트)
+        for (final cat in _singleSelectCategories) {
+          _selectedTags.putIfAbsent(cat, () => []);
+        }
+
+        _isLoading = false;
+      });
+    } else {
+      print('유저 정보 불러오기 실패: ${res.body}');
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _nicknameController.dispose();
-    _incomeController.dispose();
-    super.dispose();
+  void _updateLocationString() {
+    if (_selectedSido != null && _selectedSigungu != null) {
+      _selectedLocation = kCityGu.containsKey(_selectedSigungu) && _selectedCityGu != null
+          ? '$_selectedSido $_selectedSigungu $_selectedCityGu'
+          : '$_selectedSido $_selectedSigungu';
+    }
   }
 
   void _onIncomeChanged(String value) {
@@ -153,11 +215,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final nickname = _nicknameController.text.trim();
     if (nickname.isEmpty) return;
 
-    await Future.delayed(const Duration(seconds: 1));
-
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('사용 가능한 닉네임입니다.'),
+        content: const Text('사용 가능한 닉네임입니다.'),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -166,31 +226,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  void _saveProfile() {
-    print("닉네임: \${_nicknameController.text}");
-    print("이메일: \${_emailController.text}");
-    print("위치: \$_selectedLocation");
-    print("소득: \${_incomeController.text}");
-    print("선택된 태그: \$_selectedTags");
-    Navigator.pop(context);
-  }
-
-  void _toggleSelection(String category, String option) {
+  void _toggleTag(String category, String option) {
     setState(() {
       _selectedTags.putIfAbsent(category, () => []);
-      if (singleSelectCategories.contains(category)) {
+      if (_singleSelectCategories.contains(category)) {
         _selectedTags[category] = [option];
       } else {
-        if (_selectedTags[category]!.contains(option)) {
-          _selectedTags[category]!.remove(option);
-        } else {
-          _selectedTags[category]!.add(option);
-        }
+        _selectedTags[category]!.contains(option)
+            ? _selectedTags[category]!.remove(option)
+            : _selectedTags[category]!.add(option);
       }
     });
   }
 
-  Widget _buildSelectableCategory(String category, List<String> values) {
+  Widget _buildTagChips(String category, List<String> options) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -198,24 +247,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
         Text(category, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
         const SizedBox(height: 12),
         Wrap(
-          children: values.map((opt) {
-            final isSelected = _selectedTags[category]?.contains(opt) ?? false;
+          children: options.map((opt) {
+            final selected = _selectedTags[category]?.contains(opt) ?? false;
             return GestureDetector(
-              onTap: () => _toggleSelection(category, opt),
+              onTap: () => _toggleTag(category, opt),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 margin: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFF4263EB) : Colors.grey.shade300,
+                  color: selected ? const Color(0xFF4263EB) : Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  opt,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black54,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                child: Text(opt, style: TextStyle(
+                  color: selected ? Colors.white : Colors.black54,
+                  fontWeight: FontWeight.w500,
+                )),
               ),
             );
           }).toList(),
@@ -224,11 +270,62 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
+  void _saveProfile() async {
+    final token = await _storage.read(key: 'access_token');
+
+    final body = {
+      "email": _emailController.text.trim(),
+      "nickname": _nicknameController.text.trim(),
+      "birthDate": "2000-01-01", // 생년월일이 없다면 임시 값. 필요 시 선택 가능하게 UI 추가해야 함
+      "location": _selectedLocation ?? '',
+      "income": _incomeController.text.replaceAll(',', '').trim(),
+      "maritalStatus": _selectedTags['혼인 여부']?.first ?? '',
+      "education": _selectedTags['최종 학력']?.first ?? '',
+      "major": _selectedTags['전공']?.first ?? '',
+      "employmentStatus": _selectedTags['취업 상태'] ?? [],
+      "specialGroup": _selectedTags['특화 분야'] ?? [],
+      "interests": _selectedTags['관심 분야'] ?? [],
+    };
+
+    try {
+      final res = await http.put(
+        Uri.parse('$baseUrl/api/mypage/edit'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (res.statusCode == 200) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('저장되었습니다')),
+        );
+        Navigator.pop(context); // 이전 화면으로
+      } else {
+        print('저장 실패: ${res.body}');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('저장에 실패했습니다')),
+        );
+      }
+    } catch (e) {
+      print('오류 발생: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('서버 오류가 발생했습니다')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final List<String> sigunguList = _selectedSido == null ? [] : _sidoSigungu[_selectedSido]!;
-    final List<String> cityGuList = (_selectedSigungu != null && kCityGu.containsKey(_selectedSigungu))
-        ? kCityGu[_selectedSigungu]!
+    final sigunguList = _selectedSido == null
+        ? []
+        : _sidoSigungu[_selectedSido] ?? [];
+    final cityGuList = (_selectedSigungu != null && kCityGu.containsKey(_selectedSigungu))
+        ? kCityGu[_selectedSigungu] ?? []
         : [];
 
     return Scaffold(
@@ -242,7 +339,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
+          child: _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
@@ -267,15 +366,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           const SizedBox(width: 8),
                           ElevatedButton.icon(
                             onPressed: _checkNickname,
-                            icon: const Icon(Icons.check, size: 18, color: Colors.white),
-                            label: const Text('중복확인', style: TextStyle(color: Colors.white)),
+                            icon: const Icon(Icons.check, size: 18),
+                            label: const Text('중복확인'),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF4263EB),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 16),
+                      // 생년월일 선택 필드
+                      TextField(
+                        controller: _birthDateController,
+                        readOnly: true,
+                        decoration: const InputDecoration(labelText: '생년월일'),
+                        onTap: () async {
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: _selectedBirthDate ?? DateTime(2000, 1, 1),
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              _selectedBirthDate = picked;
+                              _birthDateController.text = DateFormat('yyyy-MM-dd').format(picked);
+                            });
+                          }
+                        },
                       ),
                       const SizedBox(height: 16),
                       const Text('거주지', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -283,7 +402,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       DropdownButton<String>(
                         isExpanded: true,
                         hint: const Text('시/도 선택'),
-                        value: _selectedSido,
+                        value: _sidoSigungu.keys.contains(_selectedSido) ? _selectedSido : null,
                         items: _sidoSigungu.keys
                             .map((s) => DropdownMenuItem(value: s, child: Text(s)))
                             .toList(),
@@ -294,30 +413,35 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           _updateLocationString();
                         }),
                       ),
-                      const SizedBox(height: 8),
                       if (_selectedSido != null)
                         DropdownButton<String>(
                           isExpanded: true,
                           hint: const Text('시/군/구 선택'),
-                          value: _selectedSigungu,
+                          value: sigunguList.contains(_selectedSigungu) ? _selectedSigungu : null,
                           items: sigunguList
-                              .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                              .map<DropdownMenuItem<String>>((g) => DropdownMenuItem<String>(
+                            value: g,
+                            child: Text(g),
+                          ))
                               .toList(),
+
                           onChanged: (v) => setState(() {
                             _selectedSigungu = v;
                             _selectedCityGu = null;
                             _updateLocationString();
                           }),
                         ),
-                      const SizedBox(height: 8),
                       if (cityGuList.isNotEmpty)
                         DropdownButton<String>(
                           isExpanded: true,
                           hint: const Text('행정구 선택'),
-                          value: _selectedCityGu,
-                          items: cityGuList
-                              .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                              .toList(),
+                          value: cityGuList.contains(_selectedCityGu) ? _selectedCityGu : null,
+                          items: cityGuList.cast<String>().map<DropdownMenuItem<String>>((c) {
+                            return DropdownMenuItem<String>(
+                              value: c,
+                              child: Text(c),
+                            );
+                          }).toList(),
                           onChanged: (v) => setState(() {
                             _selectedCityGu = v;
                             _updateLocationString();
@@ -333,18 +457,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           prefixText: '₩ ',
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('비밀번호 변경'),
-                        trailing: const Icon(Icons.arrow_forward_ios, size: 18),
-                        onTap: () {
-                          // TODO: 비밀번호 변경 페이지 이동
-                        },
-                      ),
                       const Divider(height: 32),
-                      for (final entry in options.entries)
-                        _buildSelectableCategory(entry.key, entry.value),
+                      for (final entry in _options.entries)
+                        _buildTagChips(entry.key, entry.value),
                       const SizedBox(height: 24),
                     ],
                   ),

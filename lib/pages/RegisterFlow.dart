@@ -179,7 +179,7 @@ class _RegisterFlowState extends State<RegisterFlow> {
             _state.maritalStatus  = selections['혼인 여부']?.first  ?? '';
             _state.education      = selections['최종 학력']?.first  ?? '';
             _state.major          = selections['전공']?.first      ?? '';
-
+            _state.employmentStatus = selections['취업상태']?.first ?? '';
             // 다중 선택 카테고리
             _state.specialGroup   = selections['특화분야']        ?? [];
             _state.interests      = selections['관심분야']        ?? [];
