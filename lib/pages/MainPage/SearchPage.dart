@@ -4,15 +4,31 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
 import '../config.dart';
+import '../PolicyDetailPage.dart';
 
-final String apiBase = const String.fromEnvironment('API_BASE', defaultValue: baseUrl);
+final String apiBase = const String.fromEnvironment(
+  'API_BASE',
+  defaultValue: baseUrl,
+);
 
 // 시·도 목록
 const Map<String, List<String>> _sidoSigungu = {
-  '서울특별시': [],  '부산광역시': [],  '대구광역시': [],  '인천광역시': [],
-  '광주광역시': [],  '대전광역시': [],  '울산광역시': [],  '세종특별자치시': [],
-  '경기도': [],      '강원도': [],      '충청북도': [],    '충청남도': [],
-  '전라북도': [],    '전라남도': [],    '경상북도': [],    '경상남도': [],
+  '서울특별시': [],
+  '부산광역시': [],
+  '대구광역시': [],
+  '인천광역시': [],
+  '광주광역시': [],
+  '대전광역시': [],
+  '울산광역시': [],
+  '세종특별자치시': [],
+  '경기도': [],
+  '강원도': [],
+  '충청북도': [],
+  '충청남도': [],
+  '전라북도': [],
+  '전라남도': [],
+  '경상북도': [],
+  '경상남도': [],
   '제주특별자치도': [],
 };
 
@@ -39,13 +55,20 @@ class _SearchPageState extends State<SearchPage> {
   String? _education;
   String? _major;
   final Set<String> _specialGroups = {};
-  final Set<String> _interests     = {};
+  final Set<String> _interests = {};
 
   // 리스트
   late final List<String> _sidoList = ['전국', ..._sidoSigungu.keys];
   final _employmentStatuses = [
-    '재직자', '자영업자', '미취업자', '프리랜서',
-    '일용근로자', '(예비)창업자', '단기근로자', '영농종사자', '기타'
+    '재직자',
+    '자영업자',
+    '미취업자',
+    '프리랜서',
+    '일용근로자',
+    '(예비)창업자',
+    '단기근로자',
+    '영농종사자',
+    '기타',
   ];
 
   // ───────────── 디바운스 입력
@@ -65,22 +88,26 @@ class _SearchPageState extends State<SearchPage> {
     }
     setState(() => _isLoading = true);
 
-    final uri = Uri.parse('$apiBase/api/policies/search').replace(queryParameters: {
-      'q': q,
-      if (_selectedSido != null)                'sido'            : _selectedSido!,
-      if (_selectedEmploymentStatus != null)    'employmentStatus': _selectedEmploymentStatus!,
-      if (_maritalStatus != null)               'maritalStatus'   : _maritalStatus!,
-      if (_education != null)                   'education'       : _education!,
-      if (_major != null)                       'major'           : _major!,
-      if (_specialGroups.isNotEmpty)            'specialGroup'    : _specialGroups.join(','),
-      if (_interests.isNotEmpty)                'interests'       : _interests.join(','),
-    });
+    final uri = Uri.parse('$apiBase/api/policies/search').replace(
+      queryParameters: {
+        'q': q,
+        if (_selectedSido != null) 'sido': _selectedSido!,
+        if (_selectedEmploymentStatus != null)
+          'employmentStatus': _selectedEmploymentStatus!,
+        if (_maritalStatus != null) 'maritalStatus': _maritalStatus!,
+        if (_education != null) 'education': _education!,
+        if (_major != null) 'major': _major!,
+        if (_specialGroups.isNotEmpty) 'specialGroup': _specialGroups.join(','),
+        if (_interests.isNotEmpty) 'interests': _interests.join(','),
+      },
+    );
 
     try {
       final res = await http.get(uri);
       if (res.statusCode == 200) {
-        setState(() =>
-        _results = (jsonDecode(res.body) as List).cast<String>());
+        setState(
+          () => _results = (jsonDecode(res.body) as List).cast<String>(),
+        );
       } else {
         setState(() => _results = []);
       }
@@ -168,9 +195,19 @@ class _SearchPageState extends State<SearchPage> {
         color: Colors.white,
         child: ListTile(
           dense: true,
-          title: Text(text, style: const TextStyle(fontWeight: FontWeight.w500)),
+          title: Text(
+            text,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () {}, // TODO: 상세 페이지 이동
+          onTap: () {
+            // Navigator.push(
+            //   context,
+            //   MaterialPageRoute(
+            //     builder: (_) => PolicyDetailPage(policyId: policy.id),
+            //   ),
+            // );
+          },
         ),
       ),
     );
@@ -182,10 +219,12 @@ class _SearchPageState extends State<SearchPage> {
       context: context,
       builder: (_) => ListView(
         children: _sidoList
-            .map((s) => ListTile(
-          title: Text(s),
-          onTap: () => Navigator.pop(context, s == '전국' ? null : s),
-        ))
+            .map(
+              (s) => ListTile(
+                title: Text(s),
+                onTap: () => Navigator.pop(context, s == '전국' ? null : s),
+              ),
+            )
             .toList(),
       ),
     );
@@ -201,8 +240,12 @@ class _SearchPageState extends State<SearchPage> {
       context: context,
       builder: (_) => ListView(
         children: _employmentStatuses
-            .map((e) =>
-            ListTile(title: Text(e), onTap: () => Navigator.pop(context, e)))
+            .map(
+              (e) => ListTile(
+                title: Text(e),
+                onTap: () => Navigator.pop(context, e),
+              ),
+            )
             .toList(),
       ),
     );
@@ -223,9 +266,15 @@ class _SearchPageState extends State<SearchPage> {
             setModal(() {
               setState(() {
                 switch (title) {
-                  case '혼인 여부': _maritalStatus = value; break;
-                  case '최종 학력': _education     = value; break;
-                  case '전공':     _major         = value; break;
+                  case '혼인 여부':
+                    _maritalStatus = value;
+                    break;
+                  case '최종 학력':
+                    _education = value;
+                    break;
+                  case '전공':
+                    _major = value;
+                    break;
                 }
               });
             });
@@ -242,10 +291,10 @@ class _SearchPageState extends State<SearchPage> {
           }
 
           Widget buildCategory(
-              String title,
-              List<String> items, {
-                bool multi = false,
-              }) {
+            String title,
+            List<String> items, {
+            bool multi = false,
+          }) {
             const accent = Color(0xFF0064FF); // 토스 블루
 
             return Column(
@@ -253,19 +302,34 @@ class _SearchPageState extends State<SearchPage> {
               children: [
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
                 ),
                 Wrap(
                   spacing: 6,
                   children: items.map((e) {
                     bool selected = false;
                     switch (title) {
-                      case '혼인 여부': selected = _maritalStatus == e; break;
-                      case '최종 학력': selected = _education == e; break;
-                      case '전공':     selected = _major == e; break;
-                      case '특화분야': selected = _specialGroups.contains(e); break;
-                      case '관심분야': selected = _interests.contains(e); break;
+                      case '혼인 여부':
+                        selected = _maritalStatus == e;
+                        break;
+                      case '최종 학력':
+                        selected = _education == e;
+                        break;
+                      case '전공':
+                        selected = _major == e;
+                        break;
+                      case '특화분야':
+                        selected = _specialGroups.contains(e);
+                        break;
+                      case '관심분야':
+                        selected = _interests.contains(e);
+                        break;
                     }
 
                     return FilterChip(
@@ -293,7 +357,6 @@ class _SearchPageState extends State<SearchPage> {
             );
           }
 
-
           return Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -306,21 +369,53 @@ class _SearchPageState extends State<SearchPage> {
                 children: [
                   buildCategory('혼인 여부', ['기혼', '미혼']),
                   buildCategory('최종 학력', [
-                    '고졸 미만','고교 재학','고교 졸업','대학 재학',
-                    '대졸 예정','대학 졸업','대학 석/박사'
+                    '고졸 미만',
+                    '고교 재학',
+                    '고교 졸업',
+                    '대학 재학',
+                    '대졸 예정',
+                    '대학 졸업',
+                    '대학 석/박사',
                   ]),
                   buildCategory('전공', [
-                    '인문계열','사회계열','상경계열','이학계열',
-                    '공학계열','예체능계열','농산업계열','기타'
+                    '인문계열',
+                    '사회계열',
+                    '상경계열',
+                    '이학계열',
+                    '공학계열',
+                    '예체능계열',
+                    '농산업계열',
+                    '기타',
                   ]),
                   buildCategory('특화분야', [
-                    '중소기업','여성','기초생활수급자','한부모가정','장애인',
-                    '농업인','군인','지역인재','기타'
+                    '중소기업',
+                    '여성',
+                    '기초생활수급자',
+                    '한부모가정',
+                    '장애인',
+                    '농업인',
+                    '군인',
+                    '지역인재',
+                    '기타',
                   ], multi: true),
                   buildCategory('관심분야', [
-                    '대출','보조금','바우처','금리혜택','교육지원','맞춤형상담서비스',
-                    '인턴','벤처','중소기업','청년가장','장기미취업청년','공공임대주택',
-                    '신용회복','육아','출산','해외진출','주거지원'
+                    '대출',
+                    '보조금',
+                    '바우처',
+                    '금리혜택',
+                    '교육지원',
+                    '맞춤형상담서비스',
+                    '인턴',
+                    '벤처',
+                    '중소기업',
+                    '청년가장',
+                    '장기미취업청년',
+                    '공공임대주택',
+                    '신용회복',
+                    '육아',
+                    '출산',
+                    '해외진출',
+                    '주거지원',
                   ], multi: true),
                   const SizedBox(height: 20),
                   ElevatedButton(
@@ -356,15 +451,15 @@ class _SearchPageState extends State<SearchPage> {
           Expanded(
             child: _isLoading
                 ? ListView.builder(
-              itemCount: 5,
-              itemBuilder: (_, __) => _shimmer(),
-            )
+                    itemCount: 5,
+                    itemBuilder: (_, __) => _shimmer(),
+                  )
                 : _results.isEmpty
                 ? const Center(child: Text('검색 결과가 없습니다.'))
                 : ListView.builder(
-              itemCount: _results.length,
-              itemBuilder: (_, i) => _resultItem(_results[i]),
-            ),
+                    itemCount: _results.length,
+                    itemBuilder: (_, i) => _resultItem(_results[i]),
+                  ),
           ),
         ],
       ),
