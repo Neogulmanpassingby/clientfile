@@ -1,80 +1,182 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../config.dart';
+import 'recommend_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  final _storage = const FlutterSecureStorage();
+  late Future<List<String>> _popularFuture;
+  late Future<List<String>> _recentFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _popularFuture = _fetchPopularPolicies();
+    _recentFuture = _fetchRecentPolicies();
+  }
+
+  Future<List<String>> _fetchPopularPolicies() async {
+    final token = await _storage.read(key: 'access_token');
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/policies/popular'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return List<String>.from(data['popularPolicies']);
+    } else {
+      throw Exception('인기 정책 불러오기 실패: ${res.statusCode}');
+    }
+  }
+
+  Future<List<String>> _fetchRecentPolicies() async {
+    final token = await _storage.read(key: 'access_token');
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/policies/recent'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      return List<String>.from(data['recentPolicies']);
+    } else {
+      throw Exception('최근 정책 불러오기 실패: ${res.statusCode}');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("홈")),
-      body: Padding(
+      appBar: AppBar(
+        title: const Text('정책지대'),
+      ),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 4,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
+            FutureBuilder<List<String>>(
+              future: _recentFuture,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snap.hasError) {
+                  return Text('최신 정책 에러: ${snap.error}');
+                } else {
+                  final policies = snap.data!;
+                  return _PolicyCard(
+                    title: '최신 정책',
+                    policyList: policies,
+                  );
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+            FutureBuilder<List<String>>(
+              future: _popularFuture,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snap.hasError) {
+                  return Text('인기 정책 에러: ${snap.error}');
+                } else {
+                  final policies = snap.data!;
+                  return _PolicyCard(
+                    title: '인기 정책',
+                    policyList: policies,
+                  );
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+
+            // ── 여기부터 새 카드(맨 아래) ─────────────────────
+            _ActionCard(
+              title: '나를 위한 맞춤 정책',
+              subtitle: '프롬프트를 입력해 맞춤 추천 받기',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const RecommendPage()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PolicyCard extends StatelessWidget {
+  final String title;
+  final List<String> policyList;
+
+  const _PolicyCard({required this.title, required this.policyList});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ...policyList.map((policy) => Text(policy, style: const TextStyle(fontSize: 14))).toList(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionCard extends StatelessWidget {
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  const _ActionCard({required this.title, required this.subtitle, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              const Icon(Icons.lightbulb, size: 28),
+              const SizedBox(width: 12),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(Icons.android, size: 28),
-                        ),
-                        const SizedBox(width: 12),
-                        const Text(
-                          "AI가 추천한 정책",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Divider(thickness: 1),
-                    const SizedBox(height: 12),
-                    const Text(
-                      "오늘의 추천 정책은 ‘청년 지원금 정책’입니다.\n"
-                          "자세한 내용은 정책 상세 페이지에서 확인하세요.",
-                      style: TextStyle(fontSize: 16),
-                    ),
+                    Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 4),
+                    Text(subtitle, style: const TextStyle(fontSize: 14)),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Expanded(
-              child: ListView(
-                children: const [
-                  ListTile(
-                    title: Text("1. 청년 창업 지원금"),
-                    trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  ListTile(
-                    title: Text("2. 취업 연계 프로그램"),
-                    trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                  ListTile(
-                    title: Text("3. 주거 지원 정책"),
-                    trailing: Icon(Icons.arrow_forward_ios, size: 16),
-                  ),
-                ],
-              ),
-            ),
-          ],
+              const Icon(Icons.chevron_right),
+            ],
+          ),
         ),
       ),
     );

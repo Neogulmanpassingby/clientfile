@@ -21,7 +21,7 @@ class _MyPageState extends State<MyPage> {
     if (token == null) throw Exception('로그인이 필요합니다.');
 
     final res = await http.get(
-      Uri.parse('$baseUrl/api/mypage'),
+      Uri.parse('$baseUrl/api/mypage/basic'),
       headers: {'Authorization': 'Bearer $token'},
     );
 
@@ -62,7 +62,7 @@ class _MyPageState extends State<MyPage> {
               .format(DateTime.parse(rawDate).toLocal())
               : '생년월일 없음';
 
-          final location = data['region'] ?? '거주지 없음';
+          final location = data['location'] ?? '거주지 없음';
 
           return ListView(
             padding: const EdgeInsets.all(20),

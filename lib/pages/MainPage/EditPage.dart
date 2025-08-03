@@ -1,10 +1,19 @@
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import '../config.dart';
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:math';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
+
+import '../config.dart';
+
+/// 개인정보 수정 페이지 (리팩토링 버전)
+/// --------------------------------------------------
+/// * 닉네임 중복 검사 시 흔들림 애니메이션 + 빨간 에러 텍스트
+/// * 불필요한 중복 메서드 제거
+/// * `birthDate` 저장 로직 실제 선택값 반영
+/// * 가독성을 위해 일부 위젯 빌더 메서드 분리
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
 
@@ -12,35 +21,103 @@ class EditProfilePage extends StatefulWidget {
   State<EditProfilePage> createState() => _EditProfilePageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _EditProfilePageState extends State<EditProfilePage>
+    with SingleTickerProviderStateMixin {
+  // ------------------------ controller & util ------------------------ //
   final _emailController = TextEditingController();
   final _nicknameController = TextEditingController();
   final _birthDateController = TextEditingController();
   final _incomeController = TextEditingController();
+  final _storage = const FlutterSecureStorage();
   final _formatter = NumberFormat('#,###');
-  final _storage = FlutterSecureStorage();
 
+  late final AnimationController _shakeController;
+  String? _nicknameError;
+
+  // ----------------------------- state ----------------------------- //
   DateTime? _selectedBirthDate;
   String? _selectedSido;
   String? _selectedSigungu;
   String? _selectedCityGu;
   String? _selectedLocation;
+
   Map<String, List<String>> _selectedTags = {};
 
   bool _isLoading = true;
 
-  final Set<String> _singleSelectCategories = {'혼인 여부', '최종 학력', '전공', '취업 상태'};
-  final Map<String, List<String>> _options = {
-    '혼인 여부': ['기혼', '미혼'],
-    '최종 학력': ['고졸 미만', '고교 재학', '고교 졸업', '대학 재학', '대졸 예정', '대학 졸업', '대학 석/박사'],
-    '전공': ['인문계열', '사회계열', '상경계열', '이학계열', '공학계열', '예체능계열', '농산업계열', '기타'],
-    '취업 상태': ['재직자', '자영업자', '미취업자', '프리랜서', '일용근로자', '(예비)창업자', '단기근로자', '영농종사자', '기타'],
-    '특화 분야': ['중소기업', '여성', '기초생활수급자', '한부모가정', '장애인', '농업인', '군인', '지역인재', '기타'],
-    '관심 분야': ['대출', '보조금', '바우처', '금리혜택', '교육지원', '맞춤형상담서비스',
-      '인턴', '벤처', '중소기업', '청년가장', '장기미취업청년', '공공임대주택',
-      '신용회복', '육아', '출산', '해외진출', '주거지원',],
+  // ------------------------- constants ------------------------- //
+  final Set<String> _singleSelectCategories = {
+    '혼인 여부',
+    '최종 학력',
+    '전공',
+    '취업 상태',
   };
 
+  final Map<String, List<String>> _options = {
+    '혼인 여부': ['기혼', '미혼'],
+    '최종 학력': [
+      '고졸 미만',
+      '고교 재학',
+      '고교 졸업',
+      '대학 재학',
+      '대졸 예정',
+      '대학 졸업',
+      '대학 석/박사'
+    ],
+    '전공': [
+      '인문계열',
+      '사회계열',
+      '상경계열',
+      '이학계열',
+      '공학계열',
+      '예체능계열',
+      '농산업계열',
+      '기타'
+    ],
+    '취업 상태': [
+      '재직자',
+      '자영업자',
+      '미취업자',
+      '프리랜서',
+      '일용근로자',
+      '(예비)창업자',
+      '단기근로자',
+      '영농종사자',
+      '기타'
+    ],
+    '특화 분야': [
+      '중소기업',
+      '여성',
+      '기초생활수급자',
+      '한부모가정',
+      '장애인',
+      '농업인',
+      '군인',
+      '지역인재',
+      '기타'
+    ],
+    '관심 분야': [
+      '대출',
+      '보조금',
+      '바우처',
+      '금리혜택',
+      '교육지원',
+      '맞춤형상담서비스',
+      '인턴',
+      '벤처',
+      '중소기업',
+      '청년가장',
+      '장기미취업청년',
+      '공공임대주택',
+      '신용회복',
+      '육아',
+      '출산',
+      '해외진출',
+      '주거지원'
+    ],
+  };
+
+  // 실제 서비스에선 별도 파일로 분리 권장
   final Map<String, List<String>> _sidoSigungu = {
     '서울특별시': [
       '종로구', '중구', '용산구', '성동구', '광진구', '동대문구', '중랑구', '성북구',
@@ -123,72 +200,140 @@ class _EditProfilePageState extends State<EditProfilePage> {
     '울산시': ['중구', '남구', '동구', '북구', '울주군'],
     '마산시': ['합포구', '회원구'],
   };
+  // ================================================================= //
+  // lifecycle
+  // ================================================================= //
 
   @override
   void initState() {
     super.initState();
+    _shakeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
     _fetchUserInfo();
   }
 
+  @override
+  void dispose() {
+    _shakeController.dispose();
+    _emailController.dispose();
+    _nicknameController.dispose();
+    _birthDateController.dispose();
+    _incomeController.dispose();
+    super.dispose();
+  }
+
+  // ================================================================= //
+  // data I/O
+  // ================================================================= //
+
   Future<void> _fetchUserInfo() async {
     final token = await _storage.read(key: 'access_token');
-    final res = await http.get(Uri.parse('$baseUrl/api/mypage/detail'), headers: {
-      'Authorization': 'Bearer $token',
-    });
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/mypage/detail'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      setState(() {
-        _emailController.text = data['email'] ?? '';
-        _nicknameController.text = data['nickname'] ?? '';
-
-        final rawBirth = data['birthDate'] ?? '';
-        if (rawBirth.isNotEmpty) {
-          DateTime? parsed = DateTime.tryParse(rawBirth);
-          if (parsed != null) {
-            _selectedBirthDate = parsed;
-            _birthDateController.text = DateFormat('yyyy-MM-dd').format(parsed);
-          }
-        }
-
-        final rawIncome = data['income']?.toString().replaceAll(',', '') ?? '0';
-        _incomeController.text = _formatter.format(int.tryParse(rawIncome) ?? 0);
-
-        final loc = (data['location'] ?? '').split(' ');
-        if (loc.length >= 2) {
-          _selectedSido = loc[0];
-          _selectedSigungu = loc[1];
-        }
-        if (loc.length == 3) _selectedCityGu = loc[2];
-        _updateLocationString();
-
-        final tagMap = data['tags'] as Map<String, dynamic>? ?? {};
-
-        _selectedTags = {};
-        tagMap.forEach((k, v) {
-          if (v is List) {
-            _selectedTags[k] = List<String>.from(v);
-          } else if (v is String && v.isNotEmpty) {
-            _selectedTags[k] = [v];
-          } else {
-            _selectedTags[k] = [];
-          }
-        });
-
-// 싱글‑셀렉트 카테고리가 null 로 남지 않게 보정(선택 안 된 경우 빈 리스트)
-        for (final cat in _singleSelectCategories) {
-          _selectedTags.putIfAbsent(cat, () => []);
-        }
-
-        _isLoading = false;
-      });
-    } else {
-      print('유저 정보 불러오기 실패: ${res.body}');
-      setState(() {
-        _isLoading = false;
-      });
+    if (res.statusCode != 200) {
+      setState(() => _isLoading = false);
+      debugPrint('유저 정보 불러오기 실패: ${res.body}');
+      return;
     }
+
+    final data = jsonDecode(res.body);
+    setState(() {
+      _emailController.text = data['email'] ?? '';
+      _nicknameController.text = data['nickname'] ?? '';
+
+      final birthStr = data['birthDate']?.toString() ?? '';
+      if (birthStr.isNotEmpty) {
+        final parsed = DateTime.tryParse(birthStr);
+        if (parsed != null) {
+          _selectedBirthDate = parsed;
+          _birthDateController.text = DateFormat('yyyy-MM-dd').format(parsed);
+        }
+      }
+
+      final rawIncome = data['income']?.toString().replaceAll(',', '') ?? '0';
+      _incomeController.text = _formatter.format(int.tryParse(rawIncome) ?? 0);
+
+      final loc = (data['location'] ?? '').toString().split(' ');
+      if (loc.length >= 2) {
+        _selectedSido = loc[0];
+        _selectedSigungu = loc[1];
+      }
+      if (loc.length == 3) _selectedCityGu = loc[2];
+      _updateLocationString();
+
+      final tagMap = data['tags'] as Map<String, dynamic>? ?? {};
+      _selectedTags = tagMap.map((k, v) => MapEntry(k, List<String>.from(v)));
+      for (final cat in _singleSelectCategories) {
+        _selectedTags.putIfAbsent(cat, () => []);
+      }
+
+      _isLoading = false;
+    });
   }
+
+  Future<void> _checkNickname() async {
+    final nickname = _nicknameController.text.trim();
+    if (nickname.isEmpty) return;
+
+    final token = await _storage.read(key: 'access_token');
+    final res = await http.get(
+      Uri.parse('$baseUrl/auth/check-nickname?nickname=$nickname'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    setState(() {
+      final isAvailable = res.statusCode == 200 && (jsonDecode(res.body)['available'] as bool);
+      _nicknameError = isAvailable ? null : '이미 사용 중인 닉네임입니다';
+      if (!isAvailable) _shakeController.forward(from: 0);
+    });
+  }
+
+  Future<void> _saveProfile() async {
+    final token = await _storage.read(key: 'access_token');
+
+    final body = {
+      'email': _emailController.text.trim(),
+      'nickname': _nicknameController.text.trim(),
+      'birthDate': _selectedBirthDate != null
+          ? DateFormat('yyyy-MM-dd').format(_selectedBirthDate!)
+          : '',
+      'location': _selectedLocation ?? '',
+      'income': _incomeController.text.replaceAll(',', '').trim(),
+      'maritalStatus': _selectedTags['혼인 여부']?.first ?? '',
+      'education': _selectedTags['최종 학력']?.first ?? '',
+      'major': _selectedTags['전공']?.first ?? '',
+      'employmentStatus': _selectedTags['취업 상태'] ?? [],
+      'specialGroup': _selectedTags['특화 분야'] ?? [],
+      'interests': _selectedTags['관심 분야'] ?? [],
+    };
+
+    final res = await http.put(
+      Uri.parse('$baseUrl/api/mypage/edit'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(res.statusCode == 200 ? '저장되었습니다' : '저장에 실패했습니다'),
+      ),
+    );
+    if (res.statusCode == 200) Navigator.pop(context);
+  }
+
+  // ================================================================= //
+  // util
+  // ================================================================= //
 
   void _updateLocationString() {
     if (_selectedSido != null && _selectedSigungu != null) {
@@ -211,21 +356,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     );
   }
 
-  Future<void> _checkNickname() async {
-    final nickname = _nicknameController.text.trim();
-    if (nickname.isEmpty) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('사용 가능한 닉네임입니다.'),
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      ),
-    );
-  }
-
   void _toggleTag(String category, String option) {
     setState(() {
       _selectedTags.putIfAbsent(category, () => []);
@@ -239,99 +369,84 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
   }
 
-  Widget _buildTagChips(String category, List<String> options) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 24),
-        Text(category, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 12),
-        Wrap(
-          children: options.map((opt) {
-            final selected = _selectedTags[category]?.contains(opt) ?? false;
-            return GestureDetector(
-              onTap: () => _toggleTag(category, opt),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: selected ? const Color(0xFF4263EB) : Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(opt, style: TextStyle(
+  Widget _buildTagChips(String category, List<String> options) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const SizedBox(height: 24),
+      Text(category, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 12),
+      Wrap(
+        children: options.map((opt) {
+          final selected = _selectedTags[category]?.contains(opt) ?? false;
+          return GestureDetector(
+            onTap: () => _toggleTag(category, opt),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              margin: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: selected ? const Color(0xFF4263EB) : Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                opt,
+                style: TextStyle(
                   color: selected ? Colors.white : Colors.black54,
                   fontWeight: FontWeight.w500,
-                )),
+                ),
               ),
-            );
-          }).toList(),
+            ),
+          );
+        }).toList(),
+      ),
+    ],
+  );
+
+  Widget _buildNicknameField() => Row(
+    children: [
+      Expanded(
+        child: AnimatedBuilder(
+          animation: _shakeController,
+          builder: (context, child) {
+            final dx = sin(_shakeController.value * pi * 4) * 8;
+            return Transform.translate(offset: Offset(dx, 0), child: child);
+          },
+          child: TextField(
+            controller: _nicknameController,
+            decoration: InputDecoration(
+              labelText: '닉네임',
+              errorText: _nicknameError,
+              errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
         ),
-      ],
-    );
-  }
+      ),
+      const SizedBox(width: 8),
+      ElevatedButton(
+        onPressed: _checkNickname,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF4263EB),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: const Text('중복확인', style: TextStyle(color: Colors.white)),
+      ),
+    ],
+  );
 
-  void _saveProfile() async {
-    final token = await _storage.read(key: 'access_token');
-
-    final body = {
-      "email": _emailController.text.trim(),
-      "nickname": _nicknameController.text.trim(),
-      "birthDate": "2000-01-01", // 생년월일이 없다면 임시 값. 필요 시 선택 가능하게 UI 추가해야 함
-      "location": _selectedLocation ?? '',
-      "income": _incomeController.text.replaceAll(',', '').trim(),
-      "maritalStatus": _selectedTags['혼인 여부']?.first ?? '',
-      "education": _selectedTags['최종 학력']?.first ?? '',
-      "major": _selectedTags['전공']?.first ?? '',
-      "employmentStatus": _selectedTags['취업 상태'] ?? [],
-      "specialGroup": _selectedTags['특화 분야'] ?? [],
-      "interests": _selectedTags['관심 분야'] ?? [],
-    };
-
-    try {
-      final res = await http.put(
-        Uri.parse('$baseUrl/api/mypage/edit'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode(body),
-      );
-
-      if (res.statusCode == 200) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('저장되었습니다')),
-        );
-        Navigator.pop(context); // 이전 화면으로
-      } else {
-        print('저장 실패: ${res.body}');
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('저장에 실패했습니다')),
-        );
-      }
-    } catch (e) {
-      print('오류 발생: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('서버 오류가 발생했습니다')),
-      );
-    }
-  }
+  // ================================================================= //
+  // build
+  // ================================================================= //
 
   @override
   Widget build(BuildContext context) {
-    final sigunguList = _selectedSido == null
-        ? []
-        : _sidoSigungu[_selectedSido] ?? [];
-    final cityGuList = (_selectedSigungu != null && kCityGu.containsKey(_selectedSigungu))
-        ? kCityGu[_selectedSigungu] ?? []
-        : [];
+    final sigunguList = _selectedSido == null ? [] : _sidoSigungu[_selectedSido] ?? [];
+    final cityGuList =
+    _selectedSigungu != null && kCityGu.containsKey(_selectedSigungu) ? kCityGu[_selectedSigungu] ?? [] : [];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F8FA),
       appBar: AppBar(
-        title: const Text("개인정보 수정"),
+        title: const Text('개인정보 수정'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 1,
@@ -355,28 +470,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         decoration: const InputDecoration(labelText: '이메일'),
                       ),
                       const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: _nicknameController,
-                              decoration: const InputDecoration(labelText: '닉네임'),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: _checkNickname,
-                            icon: const Icon(Icons.check, size: 18),
-                            label: const Text('중복확인'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF4263EB),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                            ),
-                          ),
-                        ],
-                      ),
+                      _buildNicknameField(),
                       const SizedBox(height: 16),
-                      // 생년월일 선택 필드
                       TextField(
                         controller: _birthDateController,
                         readOnly: true,
@@ -424,7 +519,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
                             child: Text(g),
                           ))
                               .toList(),
-
                           onChanged: (v) => setState(() {
                             _selectedSigungu = v;
                             _selectedCityGu = null;
@@ -458,8 +552,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                       ),
                       const Divider(height: 32),
-                      for (final entry in _options.entries)
-                        _buildTagChips(entry.key, entry.value),
+                      for (final entry in _options.entries) _buildTagChips(entry.key, entry.value),
                       const SizedBox(height: 24),
                     ],
                   ),

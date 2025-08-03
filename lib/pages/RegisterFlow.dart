@@ -12,12 +12,11 @@ import 'RegisterPage/RegisterPage5.dart';
 import 'RegisterPage/RegisterPage6.dart';
 import 'RegisterPage/RegisterPage7.dart';
 import 'Success.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'config.dart';
 
-const String _defaultBaseUrl = kIsWeb
-    ? 'http://localhost:3000'
-    : 'http://10.0.2.2:3000';
+const String _defaultBaseUrl = 'http://43.201.25.220:80';
 const String baseUrl =
 String.fromEnvironment('API_BASE', defaultValue: _defaultBaseUrl);
 
@@ -70,7 +69,15 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
       if (resp.statusCode == 201) {
         final json = jsonDecode(resp.body);
+
         final nickname = json['nickname'] as String;
+        final token = json['token'] as String?;
+
+        if (token != null) {
+          const storage = FlutterSecureStorage();
+          await storage.write(key: 'access_token', value: token);
+          debugPrint('✅ 토큰 저장 완료: $token');
+        }
 
         if (!mounted) return;
         Navigator.pushReplacement(
