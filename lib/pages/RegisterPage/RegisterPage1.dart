@@ -1,4 +1,3 @@
-// register_page1.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,10 +7,7 @@ import '../config.dart';
 class RegisterPage1 extends StatefulWidget {
   final void Function(String email) onNext;
 
-  const RegisterPage1({
-    super.key,
-    required this.onNext,
-  });
+  const RegisterPage1({super.key, required this.onNext});
 
   @override
   State<RegisterPage1> createState() => _RegisterPage1State();
@@ -25,9 +21,9 @@ class NoWhitespaceFormatter extends TextInputFormatter {
 
   @override
   TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue,
-      TextEditingValue newValue,
-      ) {
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
     final filtered = newValue.text.replaceAll(_re, '');
     return TextEditingValue(
       text: filtered,
@@ -43,7 +39,7 @@ class _RegisterPage1State extends State<RegisterPage1>
   final _focusNode = FocusNode();
 
   bool _showError = false; // blur/submit 에서만 true
-  bool _isValid = false;   // 내부적으로만 쓰고, 버튼은 항상 enable
+  bool _isValid = false; // 내부적으로만 쓰고, 버튼은 항상 enable
 
   // 서버 중복확인용
   bool _checking = false;
@@ -121,13 +117,15 @@ class _RegisterPage1State extends State<RegisterPage1>
       duration: const Duration(milliseconds: 400),
     );
 
-    _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 8, end: -4), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: -4, end: 4), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 4, end: 0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+    _shakeAnimation = TweenSequence<double>(
+      [
+        TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
+        TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 8, end: -4), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: -4, end: 4), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 4, end: 0), weight: 1),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
 
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
@@ -179,26 +177,28 @@ class _RegisterPage1State extends State<RegisterPage1>
                   textInputAction: TextInputAction.done,
                   autofillHints: const [AutofillHints.email],
                   decoration: InputDecoration(
-                    hintText: '이메일 입력',
+                    hintText: '이메일을 입력하세요',
                     hintStyle: TextStyle(color: Colors.grey.shade400),
                     enabledBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey, width: 1),
                     ),
                     focusedBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
-                        color: _showError ? Colors.red : const Color(0xFF4263EB),
+                        color: _showError
+                            ? Colors.red
+                            : const Color(0xFF4263EB),
                         width: 2,
                       ),
                     ),
                     suffixIcon: _checking
                         ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
+                            width: 20,
+                            height: 20,
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
                         : null,
                   ),
                   onChanged: (v) {
@@ -235,7 +235,9 @@ class _RegisterPage1State extends State<RegisterPage1>
                       return;
                     }
 
-                    final ok = await _checkEmailOnServer(_controller.text.trim());
+                    final ok = await _checkEmailOnServer(
+                      _controller.text.trim(),
+                    );
                     if (ok) {
                       widget.onNext(_controller.text.trim());
                     } else {

@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class RegisterPage3 extends StatefulWidget {
   final void Function(String password) onNext;
 
-  const RegisterPage3({
-    super.key,
-    required this.onNext,
-  });
+  const RegisterPage3({super.key, required this.onNext});
 
   @override
   State<RegisterPage3> createState() => _RegisterPage3State();
@@ -50,13 +47,15 @@ class _RegisterPage3State extends State<RegisterPage3>
       vsync: this,
       duration: const Duration(milliseconds: 400),
     );
-    _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 8, end: -4), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: -4, end: 4), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 4, end: 0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+    _shakeAnimation = TweenSequence<double>(
+      [
+        TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
+        TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 8, end: -4), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: -4, end: 4), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 4, end: 0), weight: 1),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
 
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
@@ -109,19 +108,21 @@ class _RegisterPage3State extends State<RegisterPage3>
                   autocorrect: false,
                   keyboardType: TextInputType.visiblePassword,
                   decoration: InputDecoration(
-                    hintText: '비밀번호 입력 (8자 이상, 특수문자 포함)',
+                    hintText: '비밀번호를 입력하세요',
                     enabledBorder: const UnderlineInputBorder(
                       borderSide: BorderSide(color: Colors.grey, width: 1),
                     ),
                     focusedBorder: UnderlineInputBorder(
                       borderSide: BorderSide(
-                        color: _showError ? Colors.red : const Color(0xFF4263EB),
+                        color: _showError
+                            ? Colors.red
+                            : const Color(0xFF4263EB),
                         width: 2,
                       ),
                     ),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscure ? Icons.visibility_off : Icons.visibility,
+                        _obscure ? Icons.visibility : Icons.visibility_off,
                       ),
                       onPressed: () => setState(() => _obscure = !_obscure),
                     ),

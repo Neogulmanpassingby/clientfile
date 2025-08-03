@@ -1,4 +1,3 @@
-// register_page2.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -8,10 +7,7 @@ import '../config.dart'; // baseUrl 정의되어 있다고 가정 (ex. const bas
 class RegisterPage2 extends StatefulWidget {
   final void Function(String nickname) onNext;
 
-  const RegisterPage2({
-    super.key,
-    required this.onNext,
-  });
+  const RegisterPage2({super.key, required this.onNext});
 
   @override
   State<RegisterPage2> createState() => _RegisterPage2State();
@@ -24,14 +20,25 @@ class _RegisterPage2State extends State<RegisterPage2>
 
   // 간단한 하드코딩 금칙어 (실서비스는 외부 리소스/정규화 권장)
   static const Set<String> _blacklist = {
-    'fuck', 'shit', 'bitch', 'asshole', 'bastard',
-    '씨발', '병신', '지랄', '개새', '좆', '씹', '개년', '육시랄',
+    'fuck',
+    'shit',
+    'bitch',
+    'asshole',
+    'bastard',
+    '씨발',
+    '병신',
+    '지랄',
+    '개새',
+    '좆',
+    '씹',
+    '개년',
+    '육시랄',
   };
 
-  bool _showError = false;   // blur/submit 때만 true
-  bool _isValid = false;     // 클라이언트 측 기본 유효성
-  bool _checking = false;    // 서버 중복 확인 로딩 표시
-  String? _serverError;      // 서버에서 온 에러 or 중복 메시지
+  bool _showError = false; // blur/submit 때만 true
+  bool _isValid = false; // 클라이언트 측 기본 유효성
+  bool _checking = false; // 서버 중복 확인 로딩 표시
+  String? _serverError; // 서버에서 온 에러 or 중복 메시지
 
   late final AnimationController _shakeController;
   late final Animation<double> _shakeAnimation;
@@ -45,13 +52,15 @@ class _RegisterPage2State extends State<RegisterPage2>
       duration: const Duration(milliseconds: 400),
     );
 
-    _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
-      TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 8, end: -4), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: -4, end: 4), weight: 2),
-      TweenSequenceItem(tween: Tween(begin: 4, end: 0), weight: 1),
-    ]).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
+    _shakeAnimation = TweenSequence<double>(
+      [
+        TweenSequenceItem(tween: Tween(begin: 0, end: -8), weight: 1),
+        TweenSequenceItem(tween: Tween(begin: -8, end: 8), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 8, end: -4), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: -4, end: 4), weight: 2),
+        TweenSequenceItem(tween: Tween(begin: 4, end: 0), weight: 1),
+      ],
+    ).animate(CurvedAnimation(parent: _shakeController, curve: Curves.easeOut));
 
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
@@ -175,13 +184,13 @@ class _RegisterPage2State extends State<RegisterPage2>
                     ),
                     suffixIcon: _checking
                         ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: Padding(
-                        padding: EdgeInsets.all(10),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    )
+                            width: 20,
+                            height: 20,
+                            child: Padding(
+                              padding: EdgeInsets.all(10),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
                         : null,
                   ),
                   onChanged: (_) {
@@ -200,8 +209,7 @@ class _RegisterPage2State extends State<RegisterPage2>
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    _serverError ??
-                        '욕설이 포함되어 있어요. 다른 별명을 입력해 주세요.',
+                    _serverError ?? '욕설이 포함되어 있어요. 다른 별명을 입력해 주세요.',
                     style: TextStyle(color: Colors.red.shade600, fontSize: 14),
                   ),
                 ),
@@ -219,8 +227,9 @@ class _RegisterPage2State extends State<RegisterPage2>
                       return;
                     }
 
-                    final ok =
-                    await _checkNicknameOnServer(_controller.text.trim());
+                    final ok = await _checkNicknameOnServer(
+                      _controller.text.trim(),
+                    );
                     if (ok) {
                       widget.onNext(_controller.text.trim());
                     } else {
