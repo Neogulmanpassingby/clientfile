@@ -44,7 +44,7 @@ class _SearchPageState extends State<SearchPage> {
   Timer? _debounce;
 
   bool _isLoading = false;
-  List<String> _results = [];
+  List<Map<String, dynamic>> _results = [];
 
   // 빠른 필터
   String? _selectedSido;
@@ -105,9 +105,10 @@ class _SearchPageState extends State<SearchPage> {
     try {
       final res = await http.get(uri);
       if (res.statusCode == 200) {
-        setState(
-          () => _results = (jsonDecode(res.body) as List).cast<String>(),
-        );
+        setState(() {
+          _results = (jsonDecode(res.body) as List)
+              .cast<Map<String, dynamic>>();
+        });
       } else {
         setState(() => _results = []);
       }
@@ -186,7 +187,7 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   // ───────────── 결과 카드 (토스 스타일)
-  Widget _resultItem(String text) {
+  Widget _resultItem(Map<String, dynamic> policy) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
@@ -196,17 +197,17 @@ class _SearchPageState extends State<SearchPage> {
         child: ListTile(
           dense: true,
           title: Text(
-            text,
+            policy['plcyNm'] ?? '정책명 없음',
             style: const TextStyle(fontWeight: FontWeight.w500),
           ),
           trailing: const Icon(Icons.chevron_right),
           onTap: () {
-            // Navigator.push(
-            //   context,
-            //   MaterialPageRoute(
-            //     builder: (_) => PolicyDetailPage(policyId: policy.id),
-            //   ),
-            // );
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PolicyDetailPage(policyId: policy['id']),
+              ),
+            );
           },
         ),
       ),

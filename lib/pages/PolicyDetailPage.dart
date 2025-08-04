@@ -1,10 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'config.dart';
 
 class PolicyDetailPage extends StatefulWidget {
-  final String policyId;
+  final int policyId;
 
   const PolicyDetailPage({super.key, required this.policyId});
 
@@ -21,8 +22,16 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
     _detail = fetchPolicyDetail(widget.policyId);
   }
 
-  Future<PolicyDetail> fetchPolicyDetail(String id) async {
-    final res = await http.get(Uri.parse('$baseUrl/api/policies/$id'));
+  Future<PolicyDetail> fetchPolicyDetail(int id) async {
+    final _storage = const FlutterSecureStorage();
+    final token = await _storage.read(key: 'access_token');
+    if (token == null) throw Exception('로그인이 필요합니다.');
+
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/policies/$id'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
       return PolicyDetail.fromJson(data);
