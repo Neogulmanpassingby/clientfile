@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'config.dart';
 
 class PolicyDetailPage extends StatefulWidget {
@@ -82,7 +83,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
                 '사업 기간',
                 '${policy.bizPrdBgngYmd} ~ ${policy.bizPrdEndYmd}',
               ),
-              _section('신청 링크', policy.aplyUrlAddr),
+              _sectionLink('신청 링크', policy.aplyUrlAddr),
               _section('심사 방법', policy.srngMthdCn),
               _section('제출 서류', policy.sbmsnDcmntCn),
             ],
@@ -105,6 +106,49 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
           ),
           const SizedBox(height: 4),
           Text(isValid ? content : '-'),
+        ],
+      ),
+    );
+  }
+
+  Widget _sectionLink(String title, String url) {
+    final isValid = url.trim().isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+          const SizedBox(height: 4),
+          isValid
+              ? GestureDetector(
+                  onTap: () async {
+                    final uri = Uri.parse(url);
+                    if (await canLaunchUrl(uri)) {
+                      await launchUrl(
+                        uri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('링크를 열 수 없습니다.')),
+                        );
+                      }
+                    }
+                  },
+                  child: Text(
+                    url,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                )
+              : const Text('-'),
         ],
       ),
     );
