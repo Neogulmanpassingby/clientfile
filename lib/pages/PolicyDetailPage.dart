@@ -82,8 +82,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
                 '사업 기간',
                 '${policy.bizPrdBgngYmd} ~ ${policy.bizPrdEndYmd}',
               ),
-              if (policy.aplyUrlAddr.isNotEmpty)
-                _section('신청 링크', policy.aplyUrlAddr),
+              _section('신청 링크', policy.aplyUrlAddr),
               _section('심사 방법', policy.srngMthdCn),
               _section('제출 서류', policy.sbmsnDcmntCn),
             ],
@@ -94,6 +93,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
   }
 
   Widget _section(String title, String content) {
+    final isValid = (content.trim().isNotEmpty) && content.trim() != '~';
     return Padding(
       padding: const EdgeInsets.only(top: 16, bottom: 4),
       child: Column(
@@ -104,7 +104,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 4),
-          Text(content.isNotEmpty ? content : '정보 없음'),
+          Text(isValid ? content : '-'),
         ],
       ),
     );
