@@ -5,6 +5,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart'; // 날짜 포맷
 import 'EditPage.dart';
 import '../config.dart';
+import '../OnBoardingPage.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -30,6 +31,16 @@ class _MyPageState extends State<MyPage> {
     } else {
       throw Exception('유저 정보 불러오기 실패');
     }
+  }
+
+  Future<void> _logout() async {
+    await _storage.delete(key: 'access_token');
+    if (!mounted) return;
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const OnboardingPage()),
+      (route) => false,
+    );
   }
 
   @override
@@ -58,8 +69,9 @@ class _MyPageState extends State<MyPage> {
 
           final rawDate = data['birthDate'];
           final birthDate = rawDate != null
-              ? DateFormat('yyyy-MM-dd')
-              .format(DateTime.parse(rawDate).toLocal())
+              ? DateFormat(
+                  'yyyy-MM-dd',
+                ).format(DateTime.parse(rawDate).toLocal())
               : '생년월일 없음';
 
           final location = data['location'] ?? '거주지 없음';
@@ -69,6 +81,7 @@ class _MyPageState extends State<MyPage> {
             children: [
               _tossCard(
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const CircleAvatar(
                       radius: 28,
@@ -76,15 +89,37 @@ class _MyPageState extends State<MyPage> {
                       child: Icon(Icons.person, color: Colors.black54),
                     ),
                     const SizedBox(width: 16),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(nickname,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            nickname,
                             style: const TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        Text(email, style: const TextStyle(color: Colors.grey)),
-                      ],
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            email,
+                            style: const TextStyle(color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: TextButton(
+                        onPressed: _logout,
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                          padding: EdgeInsets.zero,
+                          minimumSize: const Size(0, 30),
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text('로그아웃'),
+                      ),
                     ),
                   ],
                 ),
@@ -94,9 +129,13 @@ class _MyPageState extends State<MyPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text("내 정보",
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                    const Text(
+                      "내 정보",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     _infoRow("닉네임", nickname),
                     _infoRow("생년월일", birthDate),
@@ -110,7 +149,8 @@ class _MyPageState extends State<MyPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => const EditProfilePage()),
+                              builder: (_) => const EditProfilePage(),
+                            ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
@@ -121,7 +161,9 @@ class _MyPageState extends State<MyPage> {
                           ),
                           elevation: 0,
                           textStyle: const TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.w600),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                         child: const Text("내 정보 수정"),
                       ),
@@ -160,8 +202,9 @@ class _MyPageState extends State<MyPage> {
       child: Row(
         children: [
           SizedBox(
-              width: 80,
-              child: Text(label, style: const TextStyle(color: Colors.grey))),
+            width: 80,
+            child: Text(label, style: const TextStyle(color: Colors.grey)),
+          ),
           const SizedBox(width: 10),
           Expanded(child: Text(value)),
         ],
