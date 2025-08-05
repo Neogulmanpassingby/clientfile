@@ -57,7 +57,10 @@ class _MyPageState extends State<MyPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('마이페이지'),
+          title: const Text(
+            '마이페이지',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
           backgroundColor: Colors.white,
           foregroundColor: Colors.black,
           elevation: 1,
