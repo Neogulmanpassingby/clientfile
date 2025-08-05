@@ -214,6 +214,29 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  Future<void> refreshAccessToken() async {
+    final refreshToken = await _storage.read(key: 'refresh_token');
+    if (refreshToken == null) {
+      throw Exception('리프레시 토큰이 없습니다. 로그인이 필요합니다.');
+    }
+
+    final response = await http.post(
+      Uri.parse('$apiBase/api/auth/refresh'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'refresh_token': refreshToken}),
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      await _saveToken(json); // ✅ 기존 저장 함수 재사용
+      print('Access token 재발급 성공');
+    } else {
+      print('리프레시 실패: ${response.statusCode}');
+      throw Exception('Access token 재발급 실패. 다시 로그인하세요.');
+    }
+  }
+
+
   String? _emailValidator(String? v) {
     final value = (v ?? '').trim();
     if (value.isEmpty) return 'empty';

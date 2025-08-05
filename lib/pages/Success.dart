@@ -26,7 +26,9 @@ class ClapAnimationPage extends StatelessWidget {
           // 탭하면 MainPage로 대체(Nav stack 리셋)
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (_) => const MainPage()),
+            MaterialPageRoute(
+              builder: (_) => const MainPage(initialIndex: 0),
+            ),
           );
         },
         child: SafeArea(

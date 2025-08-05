@@ -74,7 +74,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       child: ElevatedButton(
                         onPressed: () {
                           // RegisterPage1이 아닌 RegisterFlow로 진입
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
                               builder: (context) => const RegisterFlow(),

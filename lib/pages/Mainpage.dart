@@ -4,20 +4,28 @@ import 'MainPage/SearchPage.dart';
 import 'MainPage/MyPage.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final int initialIndex;
+
+  const MainPage({super.key, this.initialIndex = 0}); // default는 0 (홈)
 
   @override
   State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
-  int _currentIndex = 0;
+  late int _currentIndex;
 
   static final List<Widget> _pages = [
     const HomePage(),
     const SearchPage(),
     const MyPage(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex;
+  }
 
   @override
   Widget build(BuildContext context) {

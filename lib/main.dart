@@ -1,13 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'pages/OnBoardingPage.dart';
+import 'utils/token_utils.dart';
+import 'pages/MainPage/HomePage.dart';
+import 'pages/LoginPage.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final token = await getValidAccessToken();
+  final Widget startPage = (token != null)
+      ? const HomePage() // 유효한 토큰 있으면 홈
+      : const LoginPage(); // 없으면 로그인
+
+  runApp(MyApp(startPage: startPage)); // 수정된 부분
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final Widget startPage; // 추가된 필드
+  const MyApp({super.key, required this.startPage});
 
   static const Color primaryColor = Color(0xFF4263EB);
 
