@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
 import '../config.dart';
 import '../PolicyDetailPage.dart';
+import '../MainPage.dart';
 
 final String apiBase = const String.fromEnvironment(
   'API_BASE',
@@ -438,31 +439,44 @@ class _SearchPageState extends State<SearchPage> {
   // ───────────── UI
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF9FAFB),
-      appBar: AppBar(
-        title: const Text('검색', style: TextStyle(fontWeight: FontWeight.w600)),
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          _searchBar(),
-          _quickFilters(),
-          const SizedBox(height: 8),
-          Expanded(
-            child: _isLoading
-                ? ListView.builder(
-                    itemCount: 5,
-                    itemBuilder: (_, __) => _shimmer(),
-                  )
-                : _results.isEmpty
-                ? const Center(child: Text('검색 결과가 없습니다.'))
-                : ListView.builder(
-                    itemCount: _results.length,
-                    itemBuilder: (_, i) => _resultItem(_results[i]),
-                  ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainPage()),
+        );
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF9FAFB),
+        appBar: AppBar(
+          title: const Text(
+            '검색',
+            style: TextStyle(fontWeight: FontWeight.w600),
           ),
-        ],
+          elevation: 0,
+        ),
+        body: Column(
+          children: [
+            _searchBar(),
+            _quickFilters(),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _isLoading
+                  ? ListView.builder(
+                      itemCount: 5,
+                      itemBuilder: (_, __) => _shimmer(),
+                    )
+                  : _results.isEmpty
+                  ? const Center(child: Text('검색 결과가 없습니다.'))
+                  : ListView.builder(
+                      itemCount: _results.length,
+                      itemBuilder: (_, i) => _resultItem(_results[i]),
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
