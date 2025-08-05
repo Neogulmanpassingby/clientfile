@@ -56,7 +56,10 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('정책지대')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text('정책지대'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
