@@ -6,6 +6,7 @@ import 'package:intl/intl.dart'; // 날짜 포맷
 import 'EditPage.dart';
 import '../config.dart';
 import '../OnBoardingPage.dart';
+import '../MainPage.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -45,135 +46,145 @@ class _MyPageState extends State<MyPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('마이페이지'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 1,
-      ),
-      backgroundColor: const Color(0xFFF7F8FA),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _fetchUserInfo(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('오류 발생: ${snapshot.error}'));
-          }
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const MainPage()),
+        );
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('마이페이지'),
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+          elevation: 1,
+        ),
+        backgroundColor: const Color(0xFFF7F8FA),
+        body: FutureBuilder<Map<String, dynamic>>(
+          future: _fetchUserInfo(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('오류 발생: ${snapshot.error}'));
+            }
 
-          final data = snapshot.data!;
-          final nickname = data['nickname'] ?? '닉네임 없음';
-          final email = data['email'] ?? '이메일 없음';
+            final data = snapshot.data!;
+            final nickname = data['nickname'] ?? '닉네임 없음';
+            final email = data['email'] ?? '이메일 없음';
 
-          final rawDate = data['birthDate'];
-          final birthDate = rawDate != null
-              ? DateFormat(
-                  'yyyy-MM-dd',
-                ).format(DateTime.parse(rawDate).toLocal())
-              : '생년월일 없음';
+            final rawDate = data['birthDate'];
+            final birthDate = rawDate != null
+                ? DateFormat(
+                    'yyyy-MM-dd',
+                  ).format(DateTime.parse(rawDate).toLocal())
+                : '생년월일 없음';
 
-          final location = data['location'] ?? '거주지 없음';
+            final location = data['location'] ?? '거주지 없음';
 
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              _tossCard(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const CircleAvatar(
-                      radius: 28,
-                      backgroundColor: Color(0xFFE6E8EB),
-                      child: Icon(Icons.person, color: Colors.black54),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            nickname,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+            return ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                _tossCard(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const CircleAvatar(
+                        radius: 28,
+                        backgroundColor: Color(0xFFE6E8EB),
+                        child: Icon(Icons.person, color: Colors.black54),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              nickname,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              email,
+                              style: const TextStyle(color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: TextButton(
+                          onPressed: _logout,
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.red,
+                            padding: EdgeInsets.zero,
+                            minimumSize: const Size(0, 30),
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          child: const Text('로그아웃'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _tossCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "내 정보",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _infoRow("닉네임", nickname),
+                      _infoRow("생년월일", birthDate),
+                      _infoRow("거주지", location),
+                      const SizedBox(height: 16),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const EditProfilePage(),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4263EB),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                            textStyle: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            email,
-                            style: const TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: TextButton(
-                        onPressed: _logout,
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          padding: EdgeInsets.zero,
-                          minimumSize: const Size(0, 30),
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          child: const Text("내 정보 수정"),
                         ),
-                        child: const Text('로그아웃'),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              _tossCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "내 정보",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _infoRow("닉네임", nickname),
-                    _infoRow("생년월일", birthDate),
-                    _infoRow("거주지", location),
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const EditProfilePage(),
-                            ),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4263EB),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        child: const Text("내 정보 수정"),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
+              ],
+            );
+          },
+        ),
       ),
     );
   }
