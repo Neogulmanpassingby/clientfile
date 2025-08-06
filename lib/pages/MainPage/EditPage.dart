@@ -33,6 +33,7 @@ class _EditProfilePageState extends State<EditProfilePage>
 
   late final AnimationController _shakeController;
   String? _nicknameError;
+  String? _nicknameSuccess;
 
   // ----------------------------- state ----------------------------- //
   DateTime? _selectedBirthDate;
@@ -281,17 +282,41 @@ class _EditProfilePageState extends State<EditProfilePage>
     if (nickname.isEmpty) return;
 
     final token = await _storage.read(key: 'access_token');
-    final res = await http.get(
-      Uri.parse('$baseUrl/auth/check-nickname?nickname=$nickname'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
 
-    setState(() {
-      final isAvailable = res.statusCode == 200 && (jsonDecode(res.body)['available'] as bool);
-      _nicknameError = isAvailable ? null : '이미 사용 중인 닉네임입니다';
-      if (!isAvailable) _shakeController.forward(from: 0);
-    });
+    try {
+      final res = await http.get(
+        Uri.parse('$baseUrl/api/auth/check-nickname?nickname=$nickname'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (res.statusCode == 200) {
+        final exists = jsonDecode(res.body)['data']['exists'] as bool;
+
+        setState(() {
+          if (exists) {
+            _nicknameError = '이미 사용 중인 닉네임입니다';
+            _nicknameSuccess = null;
+            _shakeController.forward(from: 0);
+          } else {
+            _nicknameError = null;
+            _nicknameSuccess = '사용 가능한 닉네임입니다';
+          }
+        });
+      } else {
+        setState(() {
+          _nicknameError = '서버 오류가 발생했습니다';
+          _nicknameSuccess = null;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _nicknameError = '요청 실패: ${e.toString()}';
+        _nicknameSuccess = null;
+      });
+    }
   }
+
+
 
   Future<void> _saveProfile() async {
     final token = await _storage.read(key: 'access_token');
@@ -401,37 +426,87 @@ class _EditProfilePageState extends State<EditProfilePage>
     ],
   );
 
-  Widget _buildNicknameField() => Row(
+  Widget _buildNicknameField() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Expanded(
-        child: AnimatedBuilder(
-          animation: _shakeController,
-          builder: (context, child) {
-            final dx = sin(_shakeController.value * pi * 4) * 8;
-            return Transform.translate(offset: Offset(dx, 0), child: child);
-          },
-          child: TextField(
-            controller: _nicknameController,
-            decoration: InputDecoration(
-              labelText: '닉네임',
-              errorText: _nicknameError,
-              errorStyle: const TextStyle(color: Colors.red, fontSize: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: SizedBox(
+              height: 60,
+              child: AnimatedBuilder(
+                animation: _shakeController,
+                builder: (context, child) {
+                  final dx = sin(_shakeController.value * pi * 4) * 6;
+                  return Transform.translate(offset: Offset(dx, 0), child: child);
+                },
+                child: TextField(
+                  controller: _nicknameController,
+                  decoration: InputDecoration(
+                    labelText: '닉네임',
+                    errorText: null, // 중요: 내부 errorText 제거
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: _nicknameSuccess != null ? Colors.green : Colors.grey,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: _nicknameSuccess != null ? Colors.green : const Color(0xFF4263EB),
+                        width: 2.0,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.red),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.red, width: 2),
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
+          const SizedBox(width: 8),
+          SizedBox(
+            height: 48,
+            child: ElevatedButton(
+              onPressed: _checkNickname,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4263EB),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              child: const Text('중복확인', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
       ),
-      const SizedBox(width: 8),
-      ElevatedButton(
-        onPressed: _checkNickname,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF4263EB),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      if (_nicknameSuccess != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 4, left: 8),
+          child: Text(
+            _nicknameSuccess!,
+            style: const TextStyle(color: Colors.green, fontSize: 12),
+          ),
         ),
-        child: const Text('중복확인', style: TextStyle(color: Colors.white)),
-      ),
+      if (_nicknameError != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 4, left: 8),
+          child: Text(
+            _nicknameError!,
+            style: const TextStyle(color: Colors.red, fontSize: 12),
+          ),
+        ),
     ],
   );
+
+
+
 
   // ================================================================= //
   // build
