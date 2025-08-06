@@ -445,27 +445,23 @@ class _EditProfilePageState extends State<EditProfilePage>
                   controller: _nicknameController,
                   decoration: InputDecoration(
                     labelText: '닉네임',
-                    errorText: null, // 중요: 내부 errorText 제거
+                    errorText: null, // ✅ 완전히 제거
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: _nicknameSuccess != null ? Colors.green : Colors.grey,
+                        color: _nicknameError != null
+                            ? Colors.red
+                            : (_nicknameSuccess != null ? Colors.green : Colors.grey),
                       ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: BorderSide(
-                        color: _nicknameSuccess != null ? Colors.green : const Color(0xFF4263EB),
+                        color: _nicknameError != null
+                            ? Colors.red
+                            : (_nicknameSuccess != null ? Colors.green : const Color(0xFF4263EB)),
                         width: 2.0,
                       ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Colors.red),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Colors.red, width: 2),
                     ),
                   ),
                 ),
@@ -486,14 +482,6 @@ class _EditProfilePageState extends State<EditProfilePage>
           ),
         ],
       ),
-      if (_nicknameSuccess != null)
-        Padding(
-          padding: const EdgeInsets.only(top: 4, left: 8),
-          child: Text(
-            _nicknameSuccess!,
-            style: const TextStyle(color: Colors.green, fontSize: 12),
-          ),
-        ),
       if (_nicknameError != null)
         Padding(
           padding: const EdgeInsets.only(top: 4, left: 8),
@@ -502,11 +490,17 @@ class _EditProfilePageState extends State<EditProfilePage>
             style: const TextStyle(color: Colors.red, fontSize: 12),
           ),
         ),
+      if (_nicknameSuccess != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 4, left: 8),
+          child: Text(
+            _nicknameSuccess!,
+            style: const TextStyle(color: Colors.green, fontSize: 12),
+          ),
+        ),
     ],
   );
-
-
-
+  
 
   // ================================================================= //
   // build
