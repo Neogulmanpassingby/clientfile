@@ -25,7 +25,7 @@ class _InterestPoliciesPageState extends State<InterestPoliciesPage> {
   Future<List<Map<String, dynamic>>> _fetchLikedPolicies() async {
     final token = await _storage.read(key: 'access_token');
     final res = await http.get(
-      Uri.parse('$baseUrl/api/policies/likes'),
+      Uri.parse('$baseUrl/api/mypage/likes'),
       headers: {'Authorization': 'Bearer $token'},
     );
     if (res.statusCode == 200) {
@@ -34,6 +34,13 @@ class _InterestPoliciesPageState extends State<InterestPoliciesPage> {
     } else {
       throw Exception('관심 정책 불러오기 실패: ${res.statusCode}');
     }
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      _likesFuture = _fetchLikedPolicies();
+    });
+    await _likesFuture;
   }
 
   @override
@@ -48,12 +55,14 @@ class _InterestPoliciesPageState extends State<InterestPoliciesPage> {
         foregroundColor: Colors.black,
         elevation: 1,
       ),
+      backgroundColor: const Color(0xFFF7F8FA),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _likesFuture,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snap.hasError) {
+          }
+          if (snap.hasError) {
             return Center(child: Text('오류: ${snap.error}'));
           }
 
@@ -62,49 +71,55 @@ class _InterestPoliciesPageState extends State<InterestPoliciesPage> {
             return const Center(child: Text('관심 정책이 없습니다.'));
           }
 
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 3,
-              margin: const EdgeInsets.symmetric(vertical: 6),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      '나의 관심 정책',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+          return RefreshIndicator(
+            onRefresh: _refresh,
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              itemCount: items.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, i) {
+                final policy = items[i];
+                final id = policy['id'];
+                final title = (policy['plcyNm'] ?? '제목 없음').toString();
+
+                return Card(
+                  color: Colors.white,
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: id == null
+                        ? null
+                        : () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => PolicyDetailPage(policyId: id),
+                              ),
+                            );
+                          },
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    ...items.map(
-                      (policy) => ListTile(
-                        dense: true,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 4,
+                      dense: true,
+                      title: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
                         ),
-                        title: Text(policy['plcyNm'] ?? '제목 없음'),
-                        trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  PolicyDetailPage(policyId: policy['id']),
-                            ),
-                          );
-                        },
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
+                      trailing: const Icon(Icons.chevron_right),
                     ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           );
         },
