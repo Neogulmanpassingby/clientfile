@@ -7,6 +7,7 @@ import 'EditPage.dart';
 import '../config.dart';
 import '../OnBoardingPage.dart';
 import '../MainPage.dart';
+import './InterestPoliciesPage.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -92,7 +93,9 @@ class _MyPageState extends State<MyPage> {
             return ListView(
               padding: const EdgeInsets.all(20),
               children: [
+                // 프로필 카드
                 _tossCard(
+                  margin: const EdgeInsets.only(bottom: 16),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -137,8 +140,10 @@ class _MyPageState extends State<MyPage> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
+
+                // 내 정보 카드
                 _tossCard(
+                  margin: const EdgeInsets.only(bottom: 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -184,6 +189,29 @@ class _MyPageState extends State<MyPage> {
                     ],
                   ),
                 ),
+
+                // 나의 관심 정책 카드
+                _tossCard(
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text(
+                      '나의 관심 정책',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const InterestPoliciesPage(),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
             );
           },
@@ -192,8 +220,9 @@ class _MyPageState extends State<MyPage> {
     );
   }
 
-  Widget _tossCard({required Widget child}) {
+  Widget _tossCard({required Widget child, EdgeInsetsGeometry? margin}) {
     return Container(
+      margin: margin ?? const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
