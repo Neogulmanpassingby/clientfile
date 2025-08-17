@@ -36,9 +36,85 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body);
-      return PolicyDetail.fromJson(data);
+      final detail = PolicyDetail.fromJson(data);
+
+      await _checkLiked(detail.plcyNm);
+
+      return detail;
     } else {
       throw Exception('정책 정보를 불러올 수 없습니다');
+    }
+  }
+
+  // 관심 정책 여부 확인
+  Future<void> _checkLiked(String policyTitle) async {
+    final _storage = const FlutterSecureStorage();
+    final token = await _storage.read(key: 'access_token');
+    if (token == null) return;
+
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/mypage/likes'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body) as List;
+      final titles = data.map((item) => item['plcyNm'] as String).toList();
+      if (titles.contains(policyTitle)) {
+        setState(() {
+          _isLiked = true;
+        });
+      }
+    } else {
+      debugPrint('좋아요 목록 조회 실패: ${res.body}');
+    }
+  }
+
+  // 관심 정책 추가
+  Future<void> _addLike(String policyTitle) async {
+    final _storage = const FlutterSecureStorage();
+    final token = await _storage.read(key: 'access_token');
+    if (token == null) return;
+
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/mypage/likes'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'policyTitle': policyTitle}),
+    );
+
+    if (res.statusCode == 200) {
+      setState(() {
+        _isLiked = true;
+      });
+    } else {
+      debugPrint('관심 정책 추가 실패: ${res.body}');
+    }
+  }
+
+  // 관심 정책 삭제
+  Future<void> _removeLike(String policyTitle) async {
+    final _storage = const FlutterSecureStorage();
+    final token = await _storage.read(key: 'access_token');
+    if (token == null) return;
+
+    final res = await http.delete(
+      Uri.parse('$baseUrl/api/mypage/likes'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'policyTitle': policyTitle}),
+    );
+
+    if (res.statusCode == 200) {
+      setState(() {
+        _isLiked = false;
+      });
+    } else {
+      debugPrint('관심 정책 삭제 실패: ${res.body}');
     }
   }
 
@@ -66,9 +142,11 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
                     color: _isLiked ? Colors.amber : Colors.grey,
                   ),
                   onPressed: () {
-                    setState(() {
-                      _isLiked = !_isLiked;
-                    });
+                    if (_isLiked) {
+                      _removeLike(policy.plcyNm);
+                    } else {
+                      _addLike(policy.plcyNm);
+                    }
                   },
                 ),
               ],
