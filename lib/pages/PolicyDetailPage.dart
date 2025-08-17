@@ -7,8 +7,13 @@ import 'config.dart';
 
 class PolicyDetailPage extends StatefulWidget {
   final int policyId;
+  final VoidCallback? onLikeChanged;
 
-  const PolicyDetailPage({super.key, required this.policyId});
+  const PolicyDetailPage({
+    super.key,
+    required this.policyId,
+    this.onLikeChanged,
+  });
 
   @override
   State<PolicyDetailPage> createState() => _PolicyDetailPageState();
@@ -89,6 +94,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
       setState(() {
         _isLiked = true;
       });
+      widget.onLikeChanged?.call();
     } else {
       debugPrint('관심 정책 추가 실패: ${res.body}');
     }
@@ -113,6 +119,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
       setState(() {
         _isLiked = false;
       });
+      widget.onLikeChanged?.call();
     } else {
       debugPrint('관심 정책 삭제 실패: ${res.body}');
     }

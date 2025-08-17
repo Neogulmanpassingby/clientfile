@@ -96,7 +96,10 @@ class _InterestPoliciesPageState extends State<InterestPoliciesPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => PolicyDetailPage(policyId: id),
+                                builder: (_) => PolicyDetailPage(
+                                  policyId: id,
+                                  onLikeChanged: _refresh,
+                                ),
                               ),
                             );
                           },
