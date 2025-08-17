@@ -16,6 +16,7 @@ class PolicyDetailPage extends StatefulWidget {
 
 class _PolicyDetailPageState extends State<PolicyDetailPage> {
   late Future<PolicyDetail> _detail;
+  bool _isLiked = false;
 
   @override
   void initState() {
@@ -44,7 +45,6 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('정책 상세')),
       body: FutureBuilder<PolicyDetail>(
         future: _detail,
         builder: (context, snapshot) {
@@ -56,37 +56,55 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
           }
 
           final policy = snapshot.data!;
-          return ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              Text(
-                policy.plcyNm,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('정책 상세'),
+              actions: [
+                IconButton(
+                  icon: Icon(
+                    _isLiked ? Icons.star : Icons.star_border,
+                    color: _isLiked ? Colors.amber : Colors.grey,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _isLiked = !_isLiked;
+                    });
+                  },
                 ),
-              ),
-              const SizedBox(height: 12),
-              Text('${policy.lclsfNm} > ${policy.mclsfNm}'),
-              Wrap(
-                spacing: 8,
-                children: policy.plcyKywdNm
-                    .map((kw) => Chip(label: Text(kw)))
-                    .toList(),
-              ),
-              const SizedBox(height: 20),
-              _section('정책 설명', policy.plcyExplnCn),
-              _section('지원 내용', policy.plcySprtCn),
-              _section('신청 방법', policy.plcyAplyMthdCn),
-              _section('신청 기간', policy.aplyYmd),
-              _section(
-                '사업 기간',
-                '${policy.bizPrdBgngYmd} ~ ${policy.bizPrdEndYmd}',
-              ),
-              _sectionLink('신청 링크', policy.aplyUrlAddr),
-              _section('심사 방법', policy.srngMthdCn),
-              _section('제출 서류', policy.sbmsnDcmntCn),
-            ],
+              ],
+            ),
+            body: ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                Text(
+                  policy.plcyNm,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text('${policy.lclsfNm} > ${policy.mclsfNm}'),
+                Wrap(
+                  spacing: 8,
+                  children: policy.plcyKywdNm
+                      .map((kw) => Chip(label: Text(kw)))
+                      .toList(),
+                ),
+                const SizedBox(height: 20),
+                _section('정책 설명', policy.plcyExplnCn),
+                _section('지원 내용', policy.plcySprtCn),
+                _section('신청 방법', policy.plcyAplyMthdCn),
+                _section('신청 기간', policy.aplyYmd),
+                _section(
+                  '사업 기간',
+                  '${policy.bizPrdBgngYmd} ~ ${policy.bizPrdEndYmd}',
+                ),
+                _sectionLink('신청 링크', policy.aplyUrlAddr),
+                _section('심사 방법', policy.srngMthdCn),
+                _section('제출 서류', policy.sbmsnDcmntCn),
+              ],
+            ),
           );
         },
       ),
