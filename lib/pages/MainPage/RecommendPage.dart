@@ -58,19 +58,20 @@ class _RecommendPageState extends State<RecommendPage> {
   }
 
   Widget _resultItem(Map<String, dynamic> policy) {
+    final title = (policy['plcyNm'] ?? '정책명 없음').toString();
+    final reason = (policy['reason'] ?? '').toString();
+    final List<String> badges = (policy['badges'] is List)
+        ? List<String>.from((policy['badges'] as List).map((e) => e.toString()))
+        : const [];
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         elevation: 0.5,
         borderRadius: BorderRadius.circular(12),
         color: Colors.white,
-        child: ListTile(
-          dense: true,
-          title: Text(
-            policy['plcyNm'] ?? '정책명 없음',
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          trailing: const Icon(Icons.chevron_right),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
           onTap: () {
             Navigator.push(
               context,
@@ -79,10 +80,55 @@ class _RecommendPageState extends State<RecommendPage> {
               ),
             );
           },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      if (reason.isNotEmpty || badges.isNotEmpty) const SizedBox(height: 6),
+                      if (reason.isNotEmpty)
+                        Text(
+                          reason,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Colors.black.withOpacity(0.75),
+                            height: 1.3,
+                          ),
+                        ),
+                      if (badges.isNotEmpty) const SizedBox(height: 6),
+                      if (badges.isNotEmpty)
+                        Wrap(
+                          spacing: 6,
+                          runSpacing: -8,
+                          children: badges
+                              .take(6)
+                              .map((b) => Chip(
+                            label: Text(b),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
+                          ))
+                              .toList(),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.chevron_right, color: Colors.grey.shade500),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
+
+
 
   @override
   Widget build(BuildContext context) {
