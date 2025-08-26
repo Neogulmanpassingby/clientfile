@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -14,11 +13,11 @@ import 'RegisterPage/RegisterPage7.dart';
 import 'Success.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import 'config.dart';
-
 const String _defaultBaseUrl = 'http://43.201.25.220:80';
-const String baseUrl =
-String.fromEnvironment('API_BASE', defaultValue: _defaultBaseUrl);
+const String baseUrl = String.fromEnvironment(
+  'API_BASE',
+  defaultValue: _defaultBaseUrl,
+);
 
 class RegisterState {
   String? email;
@@ -29,13 +28,13 @@ class RegisterState {
   String? income;
 
   // single‑value fields
-  String  maritalStatus = '';
-  String  education     = '';
-  String  major         = '';
+  String maritalStatus = '';
+  String education = '';
+  String major = '';
   String employmentStatus = '';
   // multi‑value fields
-  List<String> specialGroup     = [];
-  List<String> interests        = [];
+  List<String> specialGroup = [];
+  List<String> interests = [];
 }
 
 class RegisterFlow extends StatefulWidget {
@@ -57,12 +56,11 @@ class _RegisterFlowState extends State<RegisterFlow> {
       final body = _buildSignupBody(_state);
       final resp = await http
           .post(
-        Uri.parse('$baseUrl/api/auth/signup'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body),
-      )
+            Uri.parse('$baseUrl/api/auth/signup'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(body),
+          )
           .timeout(const Duration(seconds: 10));
-
 
       debugPrint('>>> REQUEST: ${jsonEncode(body)}');
       debugPrint('<<< RESPONSE: ${resp.statusCode} ${resp.body}');
@@ -91,7 +89,6 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
       // 그 외 상태코드
       _showSnack('회원가입 실패 (${resp.statusCode}) - ${resp.body}');
-
     } catch (e) {
       _showSnack('네트워크 오류: $e');
     } finally {
@@ -109,23 +106,22 @@ class _RegisterFlowState extends State<RegisterFlow> {
 
   Map<String, dynamic> _buildSignupBody(RegisterState s) {
     return {
-      "email"            : s.email          ?? '',
-      "nickname"         : s.nickname       ?? '',
-      "password"         : s.password       ?? '',
-      "birthDate"        : s.birthDate != null
+      "email": s.email ?? '',
+      "nickname": s.nickname ?? '',
+      "password": s.password ?? '',
+      "birthDate": s.birthDate != null
           ? s.birthDate!.toIso8601String().split('T')[0]
           : '2000-01-01',
-      "location"         : s.location       ?? '서울특별시 강남구',
-      "income"           : s.income         ?? '0',
-      "maritalStatus"    : s.maritalStatus,
-      "education"        : s.education,
-      "major"            : s.major,
-      "employmentStatus" : s.employmentStatus,      // NEW
-      "specialGroup"     : s.specialGroup,
-      "interests"        : s.interests,
+      "location": s.location ?? '서울특별시 강남구',
+      "income": s.income ?? '0',
+      "maritalStatus": s.maritalStatus,
+      "education": s.education,
+      "major": s.major,
+      "employmentStatus": s.employmentStatus, // NEW
+      "specialGroup": s.specialGroup,
+      "interests": s.interests,
     };
   }
-
 
   void _showSnack(String msg) {
     if (!mounted) return;
@@ -150,51 +146,65 @@ class _RegisterFlowState extends State<RegisterFlow> {
   Widget _buildStep(int step) {
     switch (step) {
       case 0:
-        return RegisterPage1(onNext: (v) {
-          _state.email = v;
-          _next();
-        });
+        return RegisterPage1(
+          onNext: (v) {
+            _state.email = v;
+            _next();
+          },
+        );
       case 1:
-        return RegisterPage2(onNext: (v) {
-          _state.nickname = v;
-          _next();
-        });
+        return RegisterPage2(
+          onNext: (v) {
+            _state.nickname = v;
+            _next();
+          },
+        );
       case 2:
-        return RegisterPage3(onNext: (v) {
-          _state.password = v;
-          _next();
-        });
+        return RegisterPage3(
+          onNext: (v) {
+            _state.password = v;
+            _next();
+          },
+        );
       case 3:
-        return RegisterPage4(onNext: (v) {
-          _state.birthDate = v;
-          _next();
-        });
+        return RegisterPage4(
+          onNext: (v) {
+            _state.birthDate = v;
+            _next();
+          },
+        );
       case 4:
-        return RegisterPage5(onNext: (v) {
-          _state.income = v;
-          _next();
-        });
+        return RegisterPage5(
+          onNext: (v) {
+            _state.income = v;
+            _next();
+          },
+        );
       case 5:
-        return RegisterPage6(onComplete: (v) {
-          _state.location = v;
-          _next();
-        });
+        return RegisterPage6(
+          onComplete: (v) {
+            _state.location = v;
+            _next();
+          },
+        );
       case 6:
-        return RegisterPage7(onComplete: (selections) {
-          setState(() {
-            // '혼인 여부'는 single-select이니 첫 번째 값
-            _state.maritalStatus  = selections['혼인 여부']?.first  ?? '';
-            _state.education      = selections['최종 학력']?.first  ?? '';
-            _state.major          = selections['전공']?.first      ?? '';
-            _state.employmentStatus = selections['취업상태']?.first ?? '';
-            // 다중 선택 카테고리
-            _state.specialGroup   = selections['특화분야']        ?? [];
-            _state.interests      = selections['관심분야']        ?? [];
+        return RegisterPage7(
+          onComplete: (selections) {
+            setState(() {
+              // '혼인 여부'는 single-select이니 첫 번째 값
+              _state.maritalStatus = selections['혼인 여부']?.first ?? '';
+              _state.education = selections['최종 학력']?.first ?? '';
+              _state.major = selections['전공']?.first ?? '';
+              _state.employmentStatus = selections['취업상태']?.first ?? '';
+              // 다중 선택 카테고리
+              _state.specialGroup = selections['특화분야'] ?? [];
+              _state.interests = selections['관심분야'] ?? [];
 
-            // (기존 태그 네이밍을 interests로 바꿨다면 _state.interests)
-          });
-          _submit();
-        });
+              // (기존 태그 네이밍을 interests로 바꿨다면 _state.interests)
+            });
+            _submit();
+          },
+        );
       default:
         return const SizedBox.shrink();
     }
@@ -211,8 +221,10 @@ class _RegisterFlowState extends State<RegisterFlow> {
             child: Column(
               children: [
                 Padding(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                   child: LinearProgressIndicator(
                     value: (_step + 1) / total,
                     backgroundColor: Colors.grey[200],
