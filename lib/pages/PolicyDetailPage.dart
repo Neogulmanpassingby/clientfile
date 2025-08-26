@@ -34,17 +34,29 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
     final token = await _storage.read(key: 'access_token');
     if (token == null) throw Exception('로그인이 필요합니다.');
 
-    final res = await http.get(
-      Uri.parse('$baseUrl/api/policies/$id'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
+    final headers = {'Authorization': 'Bearer $token'};
 
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      final detail = PolicyDetail.fromJson(data);
+    final responses = await Future.wait([
+      http.get(Uri.parse('$baseUrl/api/policies/$id'), headers: headers),
+      http.get(
+        Uri.parse('$baseUrl/api/policies/$id/ratings/summary'),
+        headers: headers,
+      ),
+    ]);
 
+    final detailRes = responses[0];
+    final ratingRes = responses[1];
+
+    if (detailRes.statusCode == 200) {
+      final detailData = jsonDecode(detailRes.body);
+      Map<String, dynamic>? ratingData;
+
+      if (ratingRes.statusCode == 200) {
+        ratingData = jsonDecode(ratingRes.body);
+      }
+
+      final detail = PolicyDetail.fromJson(detailData, ratingData);
       await _checkLiked(detail.plcyNm);
-
       return detail;
     } else {
       throw Exception('정책 정보를 불러올 수 없습니다');
@@ -161,13 +173,24 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
             body: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                Text(
-                  policy.plcyNm,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      policy.plcyNm,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (policy.ratingAvg != null)
+                      _buildRatingStars(policy.ratingAvg!)
+                    else
+                      const Text('(평점 없음)', style: TextStyle(fontSize: 14)),
+                  ],
                 ),
+
                 const SizedBox(height: 12),
                 Text('${policy.lclsfNm} > ${policy.mclsfNm}'),
                 Wrap(
@@ -256,6 +279,34 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
       ),
     );
   }
+
+  Widget _buildRatingStars(double rating) {
+    double floored = (rating * 2).floor() / 2.0;
+    int fullStars = floored.floor();
+    bool hasHalfStar = floored - fullStars >= 0.5;
+    int emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ...List.generate(
+          fullStars,
+          (_) => const Icon(Icons.star, color: Colors.amber, size: 20),
+        ),
+        if (hasHalfStar)
+          const Icon(Icons.star_half, color: Colors.amber, size: 20),
+        ...List.generate(
+          emptyStars,
+          (_) => const Icon(Icons.star_border, color: Colors.grey, size: 20),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '(${rating.toStringAsFixed(2)})',
+          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        ),
+      ],
+    );
+  }
 }
 
 class PolicyDetail {
@@ -273,6 +324,9 @@ class PolicyDetail {
   final String srngMthdCn;
   final String sbmsnDcmntCn;
 
+  final double? ratingAvg;
+  final int ratingCount;
+
   PolicyDetail({
     required this.plcyNm,
     required this.lclsfNm,
@@ -287,9 +341,14 @@ class PolicyDetail {
     required this.aplyUrlAddr,
     required this.srngMthdCn,
     required this.sbmsnDcmntCn,
+    this.ratingAvg,
+    this.ratingCount = 0,
   });
 
-  factory PolicyDetail.fromJson(Map<String, dynamic> json) {
+  factory PolicyDetail.fromJson(
+    Map<String, dynamic> json,
+    Map<String, dynamic>? ratingJson,
+  ) {
     return PolicyDetail(
       plcyNm: json['plcyNm'] ?? '',
       lclsfNm: json['lclsfNm'] ?? '',
@@ -304,6 +363,8 @@ class PolicyDetail {
       aplyUrlAddr: json['aplyUrlAddr'] ?? '',
       srngMthdCn: json['srngMthdCn'] ?? '',
       sbmsnDcmntCn: json['sbmsnDcmntCn'] ?? '',
+      ratingAvg: (ratingJson?['rating_avg'] as num?)?.toDouble(),
+      ratingCount: ratingJson?['rating_count'] ?? 0,
     );
   }
 }
