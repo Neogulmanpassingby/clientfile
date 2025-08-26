@@ -140,6 +140,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF7F8FA),
       body: FutureBuilder<PolicyDetail>(
         future: _detail,
         builder: (context, snapshot) {
@@ -153,7 +154,13 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
           final policy = snapshot.data!;
           return Scaffold(
             appBar: AppBar(
-              title: const Text('정책 상세'),
+              title: const Text(
+                '정책 상세',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+              elevation: 1,
               actions: [
                 IconButton(
                   icon: Icon(
@@ -170,47 +177,59 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
                 ),
               ],
             ),
+            backgroundColor: const Color(0xFFF7F8FA),
             body: ListView(
               padding: const EdgeInsets.all(20),
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      policy.plcyNm,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                _card(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        policy.plcyNm,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    if (policy.ratingAvg != null)
-                      _buildRatingStars(policy.ratingAvg!)
-                    else
-                      const Text('(평점 없음)', style: TextStyle(fontSize: 14)),
-                  ],
+                      const SizedBox(height: 8),
+                      if (policy.ratingAvg != null)
+                        _buildRatingStars(policy.ratingAvg!)
+                      else
+                        const Text('(평점 없음)', style: TextStyle(fontSize: 14)),
+                      const SizedBox(height: 12),
+                      Text(
+                        "${policy.lclsfNm} > ${policy.mclsfNm}",
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        children: policy.plcyKywdNm
+                            .map(
+                              (kw) => Chip(
+                                label: Text(kw),
+                                backgroundColor: const Color(0xFFF1F3F5),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
+                  ),
                 ),
-
-                const SizedBox(height: 12),
-                Text('${policy.lclsfNm} > ${policy.mclsfNm}'),
-                Wrap(
-                  spacing: 8,
-                  children: policy.plcyKywdNm
-                      .map((kw) => Chip(label: Text(kw)))
-                      .toList(),
+                _card(child: _section("정책 설명", policy.plcyExplnCn)),
+                _card(child: _section("지원 내용", policy.plcySprtCn)),
+                _card(child: _section("신청 방법", policy.plcyAplyMthdCn)),
+                _card(child: _section("신청 기간", policy.aplyYmd)),
+                _card(
+                  child: _section(
+                    "사업 기간",
+                    "${policy.bizPrdBgngYmd} ~ ${policy.bizPrdEndYmd}",
+                  ),
                 ),
-                const SizedBox(height: 20),
-                _section('정책 설명', policy.plcyExplnCn),
-                _section('지원 내용', policy.plcySprtCn),
-                _section('신청 방법', policy.plcyAplyMthdCn),
-                _section('신청 기간', policy.aplyYmd),
-                _section(
-                  '사업 기간',
-                  '${policy.bizPrdBgngYmd} ~ ${policy.bizPrdEndYmd}',
-                ),
-                _sectionLink('신청 링크', policy.aplyUrlAddr),
-                _section('심사 방법', policy.srngMthdCn),
-                _section('제출 서류', policy.sbmsnDcmntCn),
+                _card(child: _sectionLink("신청 링크", policy.aplyUrlAddr)),
+                _card(child: _section("심사 방법", policy.srngMthdCn)),
+                _card(child: _section("제출 서류", policy.sbmsnDcmntCn)),
               ],
             ),
           );
@@ -219,64 +238,74 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
     );
   }
 
-  Widget _section(String title, String content) {
-    final isValid = (content.trim().isNotEmpty) && content.trim() != '~';
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+  Widget _card({required Widget child}) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A000000),
+            blurRadius: 6,
+            offset: Offset(0, 2),
           ),
-          const SizedBox(height: 4),
-          Text(isValid ? content : '-'),
         ],
       ),
+      child: child,
+    );
+  }
+
+  Widget _section(String title, String content) {
+    final isValid = (content.trim().isNotEmpty) && content.trim() != '~';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        Text(isValid ? content : '-', style: const TextStyle(fontSize: 14)),
+      ],
     );
   }
 
   Widget _sectionLink(String title, String url) {
     final isValid = url.trim().isNotEmpty;
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, bottom: 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const SizedBox(height: 4),
-          isValid
-              ? GestureDetector(
-                  onTap: () async {
-                    final uri = Uri.parse(url);
-                    if (await canLaunchUrl(uri)) {
-                      await launchUrl(
-                        uri,
-                        mode: LaunchMode.externalApplication,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        const SizedBox(height: 8),
+        isValid
+            ? GestureDetector(
+                onTap: () async {
+                  final uri = Uri.parse(url);
+                  if (await canLaunchUrl(uri)) {
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('링크를 열 수 없습니다.')),
                       );
-                    } else {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('링크를 열 수 없습니다.')),
-                        );
-                      }
                     }
-                  },
-                  child: Text(
-                    url,
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      decoration: TextDecoration.underline,
-                    ),
+                  }
+                },
+                child: Text(
+                  url,
+                  style: const TextStyle(
+                    color: Colors.blue,
+                    decoration: TextDecoration.underline,
                   ),
-                )
-              : const Text('-'),
-        ],
-      ),
+                ),
+              )
+            : const Text('-'),
+      ],
     );
   }
 
@@ -349,6 +378,8 @@ class PolicyDetail {
     Map<String, dynamic> json,
     Map<String, dynamic>? ratingJson,
   ) {
+    final dummyRating = 4.00;
+
     return PolicyDetail(
       plcyNm: json['plcyNm'] ?? '',
       lclsfNm: json['lclsfNm'] ?? '',
@@ -363,7 +394,7 @@ class PolicyDetail {
       aplyUrlAddr: json['aplyUrlAddr'] ?? '',
       srngMthdCn: json['srngMthdCn'] ?? '',
       sbmsnDcmntCn: json['sbmsnDcmntCn'] ?? '',
-      ratingAvg: (ratingJson?['rating_avg'] as num?)?.toDouble(),
+      ratingAvg: (ratingJson?['rating_avg'] as num?)?.toDouble() ?? dummyRating,
       ratingCount: ratingJson?['rating_count'] ?? 0,
     );
   }
