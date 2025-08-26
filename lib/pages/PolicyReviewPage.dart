@@ -117,7 +117,10 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("정책 후기"),
+        title: const Text(
+          '정책 후기',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         actions: [
           IconButton(icon: const Icon(Icons.add), onPressed: _showReviewDialog),
         ],

@@ -89,8 +89,12 @@ class _RecommendPageState extends State<RecommendPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      if (reason.isNotEmpty || badges.isNotEmpty) const SizedBox(height: 6),
+                      Text(
+                        title,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      if (reason.isNotEmpty || badges.isNotEmpty)
+                        const SizedBox(height: 6),
                       if (reason.isNotEmpty)
                         Text(
                           reason,
@@ -108,11 +112,17 @@ class _RecommendPageState extends State<RecommendPage> {
                           runSpacing: -8,
                           children: badges
                               .take(6)
-                              .map((b) => Chip(
-                            label: Text(b),
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            visualDensity: const VisualDensity(horizontal: -4, vertical: -4),
-                          ))
+                              .map(
+                                (b) => Chip(
+                                  label: Text(b),
+                                  materialTapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: const VisualDensity(
+                                    horizontal: -4,
+                                    vertical: -4,
+                                  ),
+                                ),
+                              )
                               .toList(),
                         ),
                     ],
@@ -128,12 +138,15 @@ class _RecommendPageState extends State<RecommendPage> {
     );
   }
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('맞춤 정책 추천')),
+      appBar: AppBar(
+        title: const Text(
+          '맞춤 정책 추천',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
