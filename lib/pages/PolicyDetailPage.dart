@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'config.dart';
+import 'PolicyReviewPage.dart';
 
 class PolicyDetailPage extends StatefulWidget {
   final int policyId;
@@ -55,7 +56,12 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
         ratingData = jsonDecode(ratingRes.body);
       }
 
-      final detail = PolicyDetail.fromJson(detailData, ratingData);
+      final detail = PolicyDetail.fromJson(
+        detailData,
+        ratingData,
+        policyId: id,
+      );
+
       await _checkLiked(detail.plcyNm);
       return detail;
     } else {
@@ -148,7 +154,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return const Center(child: Text('불러오기 실패'));
+            return Center(child: Text('에러: ${snapshot.error}'));
           }
 
           final policy = snapshot.data!;
@@ -194,9 +200,35 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
                       ),
                       const SizedBox(height: 8),
                       if (policy.ratingAvg != null)
-                        _buildRatingStars(policy.ratingAvg!)
+                        _buildRatingStars(policy.ratingAvg!, policy.id)
                       else
-                        const Text('(평점 없음)', style: TextStyle(fontSize: 14)),
+                        Row(
+                          children: [
+                            const Text(
+                              '(평점 없음)',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            const SizedBox(width: 8),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        PolicyReviewPage(policyId: policy.id),
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                "후기",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Color(0xFF4263EB),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       const SizedBox(height: 12),
                       Text(
                         "${policy.lclsfNm} > ${policy.mclsfNm}",
@@ -309,29 +341,68 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
     );
   }
 
-  Widget _buildRatingStars(double rating) {
+  Widget _buildRatingStars(double rating, int policyId) {
     double floored = (rating * 2).floor() / 2.0;
     int fullStars = floored.floor();
     bool hasHalfStar = floored - fullStars >= 0.5;
     int emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        ...List.generate(
-          fullStars,
-          (_) => const Icon(Icons.star, color: Colors.amber, size: 20),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ...List.generate(
+              fullStars,
+              (_) => const Icon(Icons.star, color: Colors.amber, size: 20),
+            ),
+            if (hasHalfStar)
+              const Icon(Icons.star_half, color: Colors.amber, size: 20),
+            ...List.generate(
+              emptyStars,
+              (_) =>
+                  const Icon(Icons.star_border, color: Colors.grey, size: 20),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              '(${rating.toStringAsFixed(2)})',
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
+            ),
+          ],
         ),
-        if (hasHalfStar)
-          const Icon(Icons.star_half, color: Colors.amber, size: 20),
-        ...List.generate(
-          emptyStars,
-          (_) => const Icon(Icons.star_border, color: Colors.grey, size: 20),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '(${rating.toStringAsFixed(2)})',
-          style: const TextStyle(fontSize: 14, color: Colors.black87),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => PolicyReviewPage(policyId: policyId),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1F3F5),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                Text(
+                  "후기",
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF4263EB),
+                  ),
+                ),
+                SizedBox(width: 2),
+                Icon(Icons.chevron_right, size: 18, color: Color(0xFF4263EB)),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -339,6 +410,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
 }
 
 class PolicyDetail {
+  final int id;
   final String plcyNm;
   final String lclsfNm;
   final String mclsfNm;
@@ -357,6 +429,7 @@ class PolicyDetail {
   final int ratingCount;
 
   PolicyDetail({
+    required this.id,
     required this.plcyNm,
     required this.lclsfNm,
     required this.mclsfNm,
@@ -376,11 +449,13 @@ class PolicyDetail {
 
   factory PolicyDetail.fromJson(
     Map<String, dynamic> json,
-    Map<String, dynamic>? ratingJson,
-  ) {
+    Map<String, dynamic>? ratingJson, {
+    required int policyId,
+  }) {
     final dummyRating = 4.00;
 
     return PolicyDetail(
+      id: policyId,
       plcyNm: json['plcyNm'] ?? '',
       lclsfNm: json['lclsfNm'] ?? '',
       mclsfNm: json['mclsfNm'] ?? '',
