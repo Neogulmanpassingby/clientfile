@@ -178,12 +178,17 @@ class _MyPageState extends State<MyPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             elevation: 0,
-                            textStyle: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                            padding: EdgeInsets.zero,
+                          ),
+                          child: const Center(
+                            child: Text(
+                              "내 정보 수정",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
-                          child: const Text("내 정보 수정"),
                         ),
                       ),
                     ],
