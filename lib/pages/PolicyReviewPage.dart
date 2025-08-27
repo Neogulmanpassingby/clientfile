@@ -302,7 +302,8 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
               final rating = (review['rating'] as num?)?.toDouble() ?? 0.0;
               final content = review['content'] ?? "";
 
-              final isMine = myEmail != null && myEmail == author;
+              final isMine =
+                  myEmail?.trim() == review['author_email']?.toString().trim();
 
               return Container(
                 padding: const EdgeInsets.all(16),
