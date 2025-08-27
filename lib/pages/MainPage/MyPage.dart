@@ -199,6 +199,10 @@ class _MyPageState extends State<MyPage> {
                 _tossCard(
                   child: ListTile(
                     contentPadding: EdgeInsets.zero,
+                    leading: const Icon(
+                      Icons.favorite,
+                      color: Color(0xFF4263EB),
+                    ),
                     title: const Text(
                       '나의 관심 정책',
                       style: TextStyle(
