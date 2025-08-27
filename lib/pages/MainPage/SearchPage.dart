@@ -12,7 +12,6 @@ final String apiBase = const String.fromEnvironment(
   defaultValue: baseUrl,
 );
 
-// 시·도 목록
 const Map<String, List<String>> _sidoSigungu = {
   '서울특별시': [],
   '부산광역시': [],
@@ -40,25 +39,17 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  // ───────────── 상태
   final _controller = TextEditingController();
   Timer? _debounce;
-
   bool _isLoading = false;
   List<Map<String, dynamic>> _results = [];
-
-  // 빠른 필터
   String? _selectedSido;
   String? _selectedEmploymentStatus;
-
-  // 상세 필터
   String? _maritalStatus;
   String? _education;
   String? _major;
   final Set<String> _specialGroups = {};
   final Set<String> _interests = {};
-
-  // 리스트
   late final List<String> _sidoList = ['전국', ..._sidoSigungu.keys];
   final _employmentStatuses = [
     '재직자',
@@ -72,13 +63,11 @@ class _SearchPageState extends State<SearchPage> {
     '기타',
   ];
 
-  // ───────────── 디바운스 입력
   void _onSearchChanged(String q) {
     if (_debounce?.isActive ?? false) _debounce!.cancel();
     _debounce = Timer(const Duration(milliseconds: 350), () => _search(q));
   }
 
-  // ───────────── API 호출
   Future<void> _search(String q) async {
     if (q.isEmpty) {
       setState(() {
@@ -120,7 +109,6 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  // ───────────── Shimmer (로딩 카드)
   Widget _shimmer() => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
     child: Shimmer.fromColors(
@@ -136,49 +124,49 @@ class _SearchPageState extends State<SearchPage> {
     ),
   );
 
-  // ───────────── 검색바 (토스 카드형)
   Widget _searchBar() {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Material(
-        elevation: 0.5,
-        borderRadius: BorderRadius.circular(14),
-        child: TextField(
-          controller: _controller,
-          onChanged: _onSearchChanged,
-          decoration: const InputDecoration(
-            contentPadding: EdgeInsets.symmetric(vertical: 14),
-            prefixIcon: Icon(Icons.search, size: 22),
-            hintText: '검색어를 입력하세요',
-            border: InputBorder.none,
-          ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: const Color(0xFFE5E8EB)),
+        ),
+        child: Row(
+          children: [
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Icon(Icons.search, size: 20, color: Color(0xFF8C959E)),
+            ),
+            Expanded(
+              child: TextField(
+                controller: _controller,
+                onChanged: _onSearchChanged,
+                style: const TextStyle(fontSize: 15),
+                decoration: const InputDecoration(
+                  hintText: '검색어를 입력하세요',
+                  hintStyle: TextStyle(color: Color(0xFFADB5BD)),
+                  border: InputBorder.none,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // ───────────── Quick Filter Pills
   Widget _quickFilters() {
     final chips = <Widget>[
-      ActionChip(
-        label: Text(_selectedSido ?? '시·도'),
-        onPressed: _openSidoPicker,
-      ),
-      ActionChip(
-        label: Text(_selectedEmploymentStatus ?? '취업상태'),
-        onPressed: _openEmploymentPicker,
-      ),
-      ActionChip(
-        avatar: const Icon(Icons.tune, size: 18),
-        label: const Text('필터 ·'),
-        onPressed: _openDetailFilter,
-      ),
+      _pillButton(_selectedSido ?? '시·도', _openSidoPicker),
+      _pillButton(_selectedEmploymentStatus ?? '취업상태', _openEmploymentPicker),
+      _pillButtonWithIcon('필터', Icons.tune, _openDetailFilter),
     ];
-
     return SizedBox(
-      height: 40,
+      height: 44,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemBuilder: (_, i) => chips[i],
         separatorBuilder: (_, __) => const SizedBox(width: 8),
@@ -187,47 +175,118 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  // ───────────── 결과 카드 (토스 스타일)
-  Widget _resultItem(Map<String, dynamic> policy) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Material(
-        elevation: 0.5,
-        borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-        child: ListTile(
-          dense: true,
-          title: Text(
-            policy['plcyNm'] ?? '정책명 없음',
-            style: const TextStyle(fontWeight: FontWeight.w500),
-          ),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PolicyDetailPage(policyId: policy['id']),
-              ),
-            );
-          },
+  Widget _pillButton(String label, VoidCallback onTap) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: onTap,
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE5E8EB)),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Text(label, style: const TextStyle(fontSize: 14, height: 1.2)),
+      ),
+    );
+  }
+
+  Widget _pillButtonWithIcon(String label, IconData icon, VoidCallback onTap) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(22),
+      onTap: onTap,
+      child: Container(
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE5E8EB)),
+          borderRadius: BorderRadius.circular(22),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: const Color(0xFF4C6EF5)),
+            const SizedBox(width: 4),
+            Text(label, style: const TextStyle(fontSize: 14, height: 1.2)),
+          ],
         ),
       ),
     );
   }
 
-  // ───────────── 시·도 BottomSheet
+  Widget _resultItem(Map<String, dynamic> policy) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PolicyDetailPage(policyId: policy['id']),
+            ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E8EB)),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  policy['plcyNm'] ?? '정책명 없음',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _openSidoPicker() async {
     final selected = await showModalBottomSheet<String>(
       context: context,
-      builder: (_) => ListView(
-        children: _sidoList
-            .map(
-              (s) => ListTile(
-                title: Text(s),
-                onTap: () => Navigator.pop(context, s == '전국' ? null : s),
-              ),
-            )
-            .toList(),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            height: 4,
+            width: 36,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              children: _sidoList
+                  .map(
+                    (s) => ListTile(
+                      title: Text(s),
+                      onTap: () => Navigator.pop(context, s == '전국' ? null : s),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
       ),
     );
     if (selected != null || (selected == null && _selectedSido != null)) {
@@ -236,19 +295,37 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  // ───────────── 취업상태 BottomSheet
   Future<void> _openEmploymentPicker() async {
     final selected = await showModalBottomSheet<String>(
       context: context,
-      builder: (_) => ListView(
-        children: _employmentStatuses
-            .map(
-              (e) => ListTile(
-                title: Text(e),
-                onTap: () => Navigator.pop(context, e),
-              ),
-            )
-            .toList(),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (_) => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            margin: const EdgeInsets.symmetric(vertical: 12),
+            height: 4,
+            width: 36,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Expanded(
+            child: ListView(
+              children: _employmentStatuses
+                  .map(
+                    (e) => ListTile(
+                      title: Text(e),
+                      onTap: () => Navigator.pop(context, e),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+        ],
       ),
     );
     if (selected != null) {
@@ -257,11 +334,13 @@ class _SearchPageState extends State<SearchPage> {
     }
   }
 
-  // ───────────── 상세 필터 BottomSheet (기존 로직 재활용)
   void _openDetailFilter() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (ctx) => StatefulBuilder(
         builder: (context, setModal) {
           void toggleSingle(String title, String? value) {
@@ -297,8 +376,7 @@ class _SearchPageState extends State<SearchPage> {
             List<String> items, {
             bool multi = false,
           }) {
-            const accent = Color(0xFF0064FF); // 토스 블루
-
+            const accent = Color(0xFF0064FF);
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -333,7 +411,6 @@ class _SearchPageState extends State<SearchPage> {
                         selected = _interests.contains(e);
                         break;
                     }
-
                     return FilterChip(
                       showCheckmark: false,
                       selectedColor: accent.withOpacity(0.15),
@@ -425,6 +502,13 @@ class _SearchPageState extends State<SearchPage> {
                       Navigator.pop(context);
                       _search(_controller.text);
                     },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4C6EF5),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
                     child: const Text('적용'),
                   ),
                 ],
@@ -436,7 +520,6 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  // ───────────── UI
   @override
   Widget build(BuildContext context) {
     return PopScope(
@@ -460,6 +543,7 @@ class _SearchPageState extends State<SearchPage> {
         body: Column(
           children: [
             _searchBar(),
+            const SizedBox(height: 4),
             _quickFilters(),
             const SizedBox(height: 8),
             Expanded(
@@ -481,7 +565,6 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  // ───────────── 메모리 정리
   @override
   void dispose() {
     _debounce?.cancel();
