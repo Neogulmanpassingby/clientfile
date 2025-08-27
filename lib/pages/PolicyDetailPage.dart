@@ -349,9 +349,10 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
               MaterialPageRoute(
                 builder: (_) => PolicyReviewPage(policyId: policyId),
               ),
-            );
-            setState(() {
-              _detail = fetchPolicyDetail(policyId);
+            ).then((_) {
+              setState(() {
+                _detail = fetchPolicyDetail(policyId);
+              });
             });
           },
           borderRadius: BorderRadius.circular(20),
