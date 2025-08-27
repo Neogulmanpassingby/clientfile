@@ -366,14 +366,20 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
                     if (isMine) ...[
                       Align(
                         alignment: Alignment.centerRight,
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.delete_outline,
-                            color: Colors.red,
-                            size: 20,
+                        child: InkWell(
+                          onTap: _deleteReview,
+                          child: const Padding(
+                            padding: EdgeInsets.only(
+                              top: 6,
+                              bottom: 6,
+                              left: 6,
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: Colors.red,
+                              size: 20,
+                            ),
                           ),
-                          onPressed: _deleteReview,
-                          tooltip: "리뷰 삭제",
                         ),
                       ),
                     ],
