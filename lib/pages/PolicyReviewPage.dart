@@ -97,15 +97,17 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
       _showReviewDialog(
         initialRating: (myReview['rating'] as num?)?.toDouble() ?? 5,
         initialContent: myReview['content'] ?? "",
+        isEdit: true,
       );
     } else {
-      _showReviewDialog();
+      _showReviewDialog(isEdit: false);
     }
   }
 
   void _showReviewDialog({
     double initialRating = 5,
     String initialContent = "",
+    bool isEdit = false,
   }) {
     double selectedRating = initialRating;
     final controller = TextEditingController(text: initialContent);
@@ -130,9 +132,9 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "후기 작성",
-                      style: TextStyle(
+                    Text(
+                      isEdit ? "후기 수정" : "후기 작성",
+                      style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                         color: Colors.black87,
@@ -230,9 +232,9 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
                               );
                               Navigator.pop(context);
                             },
-                            child: const Text(
-                              "등록",
-                              style: TextStyle(
+                            child: Text(
+                              isEdit ? "수정" : "등록",
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
