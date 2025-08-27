@@ -40,7 +40,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
     final responses = await Future.wait([
       http.get(Uri.parse('$baseUrl/api/policies/$id'), headers: headers),
       http.get(
-        Uri.parse('$baseUrl/api/policies/$id/ratings/summary'),
+        Uri.parse('$baseUrl/api/policies/$id/reviews'),
         headers: headers,
       ),
     ]);
@@ -199,36 +199,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      if (policy.ratingAvg != null)
-                        _buildRatingStars(policy.ratingAvg!, policy.id)
-                      else
-                        Row(
-                          children: [
-                            const Text(
-                              '(평점 없음)',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            const SizedBox(width: 8),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        PolicyReviewPage(policyId: policy.id),
-                                  ),
-                                );
-                              },
-                              child: const Text(
-                                "후기",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Color(0xFF4263EB),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      _buildRatingStars(policy.ratingAvg!, policy.id),
                       const SizedBox(height: 12),
                       Text(
                         "${policy.lclsfNm} > ${policy.mclsfNm}",
@@ -379,6 +350,9 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
                 builder: (_) => PolicyReviewPage(policyId: policyId),
               ),
             );
+            setState(() {
+              _detail = fetchPolicyDetail(policyId);
+            });
           },
           borderRadius: BorderRadius.circular(20),
           child: Container(
@@ -452,7 +426,9 @@ class PolicyDetail {
     Map<String, dynamic>? ratingJson, {
     required int policyId,
   }) {
-    final dummyRating = 4.00;
+    final summary = ratingJson?['summary'] as Map<String, dynamic>?;
+
+    final hasReview = (summary?['rating_count'] ?? 0) > 0;
 
     return PolicyDetail(
       id: policyId,
@@ -469,8 +445,10 @@ class PolicyDetail {
       aplyUrlAddr: json['aplyUrlAddr'] ?? '',
       srngMthdCn: json['srngMthdCn'] ?? '',
       sbmsnDcmntCn: json['sbmsnDcmntCn'] ?? '',
-      ratingAvg: (ratingJson?['rating_avg'] as num?)?.toDouble() ?? dummyRating,
-      ratingCount: ratingJson?['rating_count'] ?? 0,
+      ratingAvg: hasReview
+          ? double.tryParse(summary?['rating_avg']?.toString() ?? '') ?? 4.0
+          : 4.0,
+      ratingCount: summary?['rating_count'] ?? 0,
     );
   }
 }
