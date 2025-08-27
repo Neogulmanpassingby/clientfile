@@ -6,7 +6,10 @@ import 'Success.dart';
 import 'config.dart';
 
 // 환경변수 우선, 없으면 config.dart의 baseUrl 사용
-const String apiBase = String.fromEnvironment('API_BASE', defaultValue: baseUrl);
+const String apiBase = String.fromEnvironment(
+  'API_BASE',
+  defaultValue: baseUrl,
+);
 final _storage = FlutterSecureStorage();
 
 class LoginPage extends StatefulWidget {
@@ -55,7 +58,10 @@ class _ShakingTextFormFieldState extends State<ShakingTextFormField>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 400));
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
     _offsetX = TweenSequence<double>([
       TweenSequenceItem(tween: Tween(begin: 0, end: -12), weight: 1),
       TweenSequenceItem(tween: Tween(begin: -12, end: 12), weight: 2),
@@ -165,7 +171,9 @@ class _LoginPageState extends State<LoginPage> {
       await _storage.write(key: 'refresh_token', value: refreshToken);
     }
     if (expiresIn != null) {
-      final expiryAt = DateTime.now().add(Duration(seconds: expiresIn)).toIso8601String();
+      final expiryAt = DateTime.now()
+          .add(Duration(seconds: expiresIn))
+          .toIso8601String();
       await _storage.write(key: 'access_token_exp', value: expiryAt);
     }
   }
@@ -190,8 +198,12 @@ class _LoginPageState extends State<LoginPage> {
 
       if (resp.statusCode == 200) {
         final json = jsonDecode(resp.body) as Map<String, dynamic>;
+        final email = _emailController.text.trim();
         final nickname = json['nickname'] as String? ?? '';
+
         await _saveToken(json);
+        await _storage.write(key: 'user_email', value: email);
+        await _storage.write(key: 'user_nickname', value: nickname);
 
         if (!mounted) return;
         Navigator.pushReplacement(
@@ -235,7 +247,6 @@ class _LoginPageState extends State<LoginPage> {
       throw Exception('Access token 재발급 실패. 다시 로그인하세요.');
     }
   }
-
 
   String? _emailValidator(String? v) {
     final value = (v ?? '').trim();
@@ -291,7 +302,9 @@ class _LoginPageState extends State<LoginPage> {
                   onFieldSubmitted: (_) => _login(),
                   validator: _passwordValidator,
                   suffixIcon: IconButton(
-                    icon: Icon(_obscurePw ? Icons.visibility : Icons.visibility_off),
+                    icon: Icon(
+                      _obscurePw ? Icons.visibility : Icons.visibility_off,
+                    ),
                     onPressed: () => setState(() => _obscurePw = !_obscurePw),
                   ),
                 ),
@@ -311,16 +324,16 @@ class _LoginPageState extends State<LoginPage> {
                   child: _globalError == null
                       ? const SizedBox.shrink()
                       : Padding(
-                    padding: const EdgeInsets.only(left: 4),
-                    child: Text(
-                      _globalError!,
-                      style: const TextStyle(
-                        color: Color(0xFFD32F2F),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-                  ),
+                          padding: const EdgeInsets.only(left: 4),
+                          child: Text(
+                            _globalError!,
+                            style: const TextStyle(
+                              color: Color(0xFFD32F2F),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -336,21 +349,21 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     child: _isLoading
                         ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2.5,
-                        color: Colors.white,
-                      ),
-                    )
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: Colors.white,
+                            ),
+                          )
                         : const Text(
-                      '로그인',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                            '로그인',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                   ),
                 ),
               ],
