@@ -168,18 +168,21 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
               foregroundColor: Colors.black,
               elevation: 1,
               actions: [
-                IconButton(
-                  icon: Icon(
-                    _isLiked ? Icons.star : Icons.star_border,
-                    color: _isLiked ? Colors.amber : Colors.grey,
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: IconButton(
+                    icon: Icon(
+                      _isLiked ? Icons.favorite : Icons.favorite_border,
+                      color: _isLiked ? Colors.red : Colors.grey,
+                    ),
+                    onPressed: () {
+                      if (_isLiked) {
+                        _removeLike(policy.plcyNm);
+                      } else {
+                        _addLike(policy.plcyNm);
+                      }
+                    },
                   ),
-                  onPressed: () {
-                    if (_isLiked) {
-                      _removeLike(policy.plcyNm);
-                    } else {
-                      _addLike(policy.plcyNm);
-                    }
-                  },
                 ),
               ],
             ),
