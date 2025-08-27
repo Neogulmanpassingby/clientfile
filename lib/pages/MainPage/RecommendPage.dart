@@ -66,72 +66,82 @@ class _RecommendPageState extends State<RecommendPage> {
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Material(
-        elevation: 0.5,
+      child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        color: Colors.white,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => PolicyDetailPage(policyId: policy['id']),
-              ),
-            );
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      if (reason.isNotEmpty || badges.isNotEmpty)
-                        const SizedBox(height: 6),
-                      if (reason.isNotEmpty)
-                        Text(
-                          reason,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.black.withOpacity(0.75),
-                            height: 1.3,
-                          ),
-                        ),
-                      if (badges.isNotEmpty) const SizedBox(height: 6),
-                      if (badges.isNotEmpty)
-                        Wrap(
-                          spacing: 6,
-                          runSpacing: -8,
-                          children: badges
-                              .take(6)
-                              .map(
-                                (b) => Chip(
-                                  label: Text(b),
-                                  materialTapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: const VisualDensity(
-                                    horizontal: -4,
-                                    vertical: -4,
-                                  ),
-                                ),
-                              )
-                              .toList(),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(Icons.chevron_right, color: Colors.grey.shade500),
-              ],
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => PolicyDetailPage(policyId: policy['id']),
             ),
+          );
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE5E8EB)),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    if (reason.isNotEmpty || badges.isNotEmpty)
+                      const SizedBox(height: 6),
+                    if (reason.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        reason,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.black.withValues(alpha: 0.75),
+                          height: 1.4,
+                        ),
+                      ),
+                    ],
+                    if (badges.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: -8,
+                        children: badges
+                            .take(6)
+                            .map(
+                              (b) => Chip(
+                                label: Text(b),
+                                backgroundColor: const Color(0xFFF1F3F5),
+                                labelStyle: const TextStyle(fontSize: 12),
+                                materialTapTargetSize:
+                                    MaterialTapTargetSize.shrinkWrap,
+                                visualDensity: const VisualDensity(
+                                  horizontal: -4,
+                                  vertical: -4,
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: Colors.grey),
+            ],
           ),
         ),
       ),
@@ -141,49 +151,89 @@ class _RecommendPageState extends State<RecommendPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF9FAFB),
       appBar: AppBar(
         title: const Text(
           '맞춤 정책 추천',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
+        backgroundColor: Colors.white,
+        elevation: 0.5,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            TextField(
-              controller: _promptCtrl,
-              decoration: const InputDecoration(
-                labelText: '프롬프트',
-                hintText: '예) 주거‧창업 관련 정책 알려줘',
-                border: OutlineInputBorder(),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE5E8EB)),
+              ),
+              child: TextField(
+                controller: _promptCtrl,
+                decoration: const InputDecoration(
+                  labelText: '프롬프트',
+                  hintText: '예) 주거‧창업 관련 정책 알려줘',
+                  hintStyle: TextStyle(color: Color(0xFFADB5BD)),
+                  border: InputBorder.none,
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 12),
-            SizedBox(
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: SizedBox(
               width: double.infinity,
+              height: 46,
               child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4C6EF5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
                 onPressed: _loading ? null : _fetchRecommendations,
                 child: _loading
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
                       )
-                    : const Text('추천 받기'),
+                    : const Text(
+                        '추천 받기',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: _results.isEmpty
-                  ? const Center(child: Text('추천 결과가 없습니다.'))
-                  : ListView.builder(
-                      itemCount: _results.length,
-                      itemBuilder: (_, i) => _resultItem(_results[i]),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: _results.isEmpty
+                ? const Center(
+                    child: Text(
+                      '추천 결과가 없습니다.',
+                      style: TextStyle(color: Colors.grey),
                     ),
-            ),
-          ],
-        ),
+                  )
+                : ListView.builder(
+                    itemCount: _results.length,
+                    itemBuilder: (_, i) => _resultItem(_results[i]),
+                  ),
+          ),
+        ],
       ),
     );
   }
