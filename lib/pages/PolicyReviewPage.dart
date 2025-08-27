@@ -86,6 +86,23 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
     }
   }
 
+  Future<void> _openReviewDialog() async {
+    final reviews = await _fetchReviews();
+    final myReview = reviews.firstWhere(
+      (r) => r['author_email'] == myEmail,
+      orElse: () => {},
+    );
+
+    if (myReview.isNotEmpty) {
+      _showReviewDialog(
+        initialRating: (myReview['rating'] as num?)?.toDouble() ?? 5,
+        initialContent: myReview['content'] ?? "",
+      );
+    } else {
+      _showReviewDialog();
+    }
+  }
+
   void _showReviewDialog({
     double initialRating = 5,
     String initialContent = "",
@@ -249,7 +266,7 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
         actions: [
           IconButton(
             icon: const Icon(Icons.add, color: Colors.black),
-            onPressed: () => _showReviewDialog(),
+            onPressed: _openReviewDialog,
           ),
         ],
       ),
@@ -345,34 +362,17 @@ class _PolicyReviewPageState extends State<PolicyReviewPage> {
                     const SizedBox(height: 8),
                     Text(content, style: const TextStyle(fontSize: 14)),
                     if (isMine) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: () => _showReviewDialog(
-                              initialRating: rating,
-                              initialContent: content,
-                            ),
-                            child: const Text("수정"),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Colors.red,
+                            size: 20,
                           ),
-                          const SizedBox(width: 8),
-                          OutlinedButton(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.red,
-                              side: const BorderSide(color: Colors.red),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                            onPressed: _deleteReview,
-                            child: const Text("삭제"),
-                          ),
-                        ],
+                          onPressed: _deleteReview,
+                          tooltip: "리뷰 삭제",
+                        ),
                       ),
                     ],
                   ],
