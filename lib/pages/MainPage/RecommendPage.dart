@@ -16,6 +16,7 @@ class _RecommendPageState extends State<RecommendPage> {
   final _storage = const FlutterSecureStorage();
   final _promptCtrl = TextEditingController();
   bool _loading = false;
+  bool _hasSearched = false;
   List<Map<String, dynamic>> _results = [];
 
   Future<void> _fetchRecommendations() async {
@@ -27,7 +28,10 @@ class _RecommendPageState extends State<RecommendPage> {
       return;
     }
 
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _hasSearched = true;
+    });
 
     try {
       final token = await _storage.read(key: 'access_token');
@@ -221,18 +225,27 @@ class _RecommendPageState extends State<RecommendPage> {
           ),
           const SizedBox(height: 8),
           Expanded(
-            child: _results.isEmpty
+            child: _loading
+                ? const Center(child: CircularProgressIndicator())
+                : (!_hasSearched
                 ? const Center(
-                    child: Text(
-                      '추천 결과가 없습니다.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  )
+              child: Text(
+                '프롬프트를 입력하고 [추천 받기]를 눌러보세요.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            )
+                : (_results.isEmpty
+                ? const Center(
+              child: Text(
+                '추천 결과가 없습니다.',
+                style: TextStyle(color: Colors.grey),
+              ),
+            )
                 : ListView.builder(
-                    itemCount: _results.length,
-                    itemBuilder: (_, i) => _resultItem(_results[i]),
-                  ),
-          ),
+              itemCount: _results.length,
+              itemBuilder: (_, i) => _resultItem(_results[i]),
+            ))),
+          )
         ],
       ),
     );

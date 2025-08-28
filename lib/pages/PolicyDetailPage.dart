@@ -450,8 +450,8 @@ class PolicyDetail {
       srngMthdCn: json['srngMthdCn'] ?? '',
       sbmsnDcmntCn: json['sbmsnDcmntCn'] ?? '',
       ratingAvg: hasReview
-          ? double.tryParse(summary?['rating_avg']?.toString() ?? '') ?? 4.0
-          : 4.0,
+          ? double.tryParse(summary?['rating_avg']?.toString() ?? '') ?? 0.0
+          : 0.0,
       ratingCount: summary?['rating_count'] ?? 0,
     );
   }
