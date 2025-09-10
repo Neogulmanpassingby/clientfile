@@ -4,14 +4,15 @@ import 'pages/OnBoardingPage.dart';
 import 'utils/token_utils.dart';
 import 'pages/MainPage/HomePage.dart';
 import 'pages/LoginPage.dart';
+import 'pages/Mainpage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final token = await getValidAccessToken();
   final Widget startPage = (token != null)
-      ? const HomePage() // 유효한 토큰 있으면 홈
-      : const LoginPage(); // 없으면 로그인
+      ? const MainPage() // 유효한 토큰 있으면 홈
+      : const OnboardingPage(); // 없으면 로그인
 
   runApp(MyApp(startPage: startPage)); // 수정된 부분
 }
@@ -48,7 +49,7 @@ class MyApp extends StatelessWidget {
       ),
       localizationsDelegates: _localizationDelegates,
       supportedLocales: _supportedLocales,
-      home: const OnboardingPage(),
+      home: startPage,
     );
   }
 

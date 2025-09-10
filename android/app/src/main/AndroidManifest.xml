@@ -17,7 +17,7 @@
     </queries>
 
     <application
-        android:label="untitled1"
+        android:label="청정지대"
         android:usesCleartextTraffic="true"
         android:icon="@mipmap/ic_launcher">
         <activity

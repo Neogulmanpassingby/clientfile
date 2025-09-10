@@ -1,3 +1,4 @@
+// 파일 전체 그대로 붙여서 사용하면 됨
 import 'package:flutter/material.dart';
 
 class RegisterPage4 extends StatefulWidget {
@@ -45,14 +46,27 @@ class _RegisterPage4State extends State<RegisterPage4> {
                     ),
                   ],
                 ),
-                child: CalendarDatePicker(
-                  initialDate: _selectedDate,
-                  firstDate: DateTime(1900),
-                  lastDate: DateTime.now(),
-                  onDateChanged: (date) {
-                    setState(() => _selectedDate = date);
-                  },
+
+                child: Theme(
+                  data: ThemeData(
+                    useMaterial3: false,
+                    colorScheme: ColorScheme.light(
+                      onPrimary: Colors.blue,                 // 선택된 날짜 안 글자색
+                      surface: Colors.white,
+                      onSurface: Colors.black,               // 기본 날짜 글자색
+                    ),
+                    textTheme: const TextTheme(
+                      bodyLarge: TextStyle(fontSize: 22),    // 날짜 글자 크기 키우기
+                    ),
+                  ),
+                  child: CalendarDatePicker(
+                    initialDate: _selectedDate,
+                    firstDate: DateTime(1930),
+                    lastDate: DateTime.now(),
+                    onDateChanged: (date) => setState(() => _selectedDate = date),
+                  ),
                 ),
+
               ),
               const SizedBox(height: 24),
               Center(

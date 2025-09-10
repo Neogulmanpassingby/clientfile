@@ -534,6 +534,7 @@ class _SearchPageState extends State<SearchPage> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF9FAFB),
         appBar: AppBar(
+          automaticallyImplyLeading: false,
           title: const Text(
             '검색',
             style: TextStyle(fontWeight: FontWeight.w600),

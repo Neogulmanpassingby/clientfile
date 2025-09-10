@@ -551,7 +551,54 @@ class _EditProfilePageState extends State<EditProfilePage>
                             initialDate: _selectedBirthDate ?? DateTime(2000, 1, 1),
                             firstDate: DateTime(1900),
                             lastDate: DateTime.now(),
+                            builder: (context, child) {
+                              return Theme(
+                                data: ThemeData(
+                                  useMaterial3: false, // M2처럼 원형 강조
+                                  colorScheme: const ColorScheme.light(
+                                    primary: Color(0xFF4263EB), // ✅ 선택된 날짜 원 배경색
+                                    onPrimary: Colors.white,    // ✅ 원 안 텍스트색
+                                    surface: Colors.white,
+                                    onSurface: Colors.black,    // 일반 날짜 텍스트색
+                                  ),
+                                  datePickerTheme: DatePickerThemeData(
+                                    // ✅ 날짜 셀 모양을 '원'으로 강제
+                                    dayShape: const WidgetStatePropertyAll<OutlinedBorder?>(CircleBorder()),
+
+                                    // ✅ 날짜 숫자 크기(선택/비선택 공통)
+                                    dayStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+
+                                    // ✅ 선택 상태 배경/전경 색
+                                    dayBackgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                                      if (states.contains(WidgetState.selected)) return const Color(0xFF4263EB);
+                                      return null; // 기본(투명)
+                                    }),
+                                    dayForegroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                                      if (states.contains(WidgetState.selected)) return Colors.white;
+                                      if (states.contains(WidgetState.disabled)) return Colors.black38;
+                                      return null; // 시스템 기본
+                                    }),
+
+                                    // (옵션) 오늘 표시 색감 보강
+                                    todayBackgroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                                      if (states.contains(WidgetState.selected)) return const Color(0xFF4263EB);
+                                      return const Color(0x334263EB); // 약한 배경
+                                    }),
+                                    todayForegroundColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                                      if (states.contains(WidgetState.selected)) return Colors.white;
+                                      return const Color(0xFF4263EB);
+                                    }),
+
+                                    // (옵션) 헤더 텍스트 크기
+                                    headerHeadlineStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                                    headerHelpStyle: const TextStyle(fontSize: 12),
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
+
                           if (picked != null) {
                             setState(() {
                               _selectedBirthDate = picked;
