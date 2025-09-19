@@ -62,7 +62,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
         policyId: id,
       );
 
-      await _checkLiked(detail.plcyNm);
+      await _checkLiked(detail.id);
       return detail;
     } else {
       throw Exception('정책 정보를 불러올 수 없습니다');
@@ -70,7 +70,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
   }
 
   // 관심 정책 여부 확인
-  Future<void> _checkLiked(String policyTitle) async {
+  Future<void> _checkLiked(int policyId) async {
     final _storage = const FlutterSecureStorage();
     final token = await _storage.read(key: 'access_token');
     if (token == null) return;
@@ -82,19 +82,19 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
 
     if (res.statusCode == 200) {
       final data = jsonDecode(res.body) as List;
-      final titles = data.map((item) => item['plcyNm'] as String).toList();
-      if (titles.contains(policyTitle)) {
+      final ids = data.map((item) => item['id'] as int).toList();
+      if (ids.contains(policyId)) {
         setState(() {
           _isLiked = true;
         });
       }
     } else {
-      debugPrint('좋아요 목록 조회 실패: ${res.body}');
+      debugPrint('관심 정책 목록 조회 실패: ${res.body}');
     }
   }
 
   // 관심 정책 추가
-  Future<void> _addLike(String policyTitle) async {
+  Future<void> _addLike(int policyId) async {
     final _storage = const FlutterSecureStorage();
     final token = await _storage.read(key: 'access_token');
     if (token == null) return;
@@ -105,7 +105,7 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'policyTitle': policyTitle}),
+      body: jsonEncode({'policyId': policyId}),
     );
 
     if (res.statusCode == 200) {
@@ -119,18 +119,17 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
   }
 
   // 관심 정책 삭제
-  Future<void> _removeLike(String policyTitle) async {
+  Future<void> _removeLike(int policyId) async {
     final _storage = const FlutterSecureStorage();
     final token = await _storage.read(key: 'access_token');
     if (token == null) return;
 
     final res = await http.delete(
-      Uri.parse('$baseUrl/api/mypage/likes'),
+      Uri.parse('$baseUrl/api/mypage/likes/$policyId'),
       headers: {
         'Authorization': 'Bearer $token',
         'Content-Type': 'application/json',
       },
-      body: jsonEncode({'policyTitle': policyTitle}),
     );
 
     if (res.statusCode == 200) {
@@ -177,9 +176,9 @@ class _PolicyDetailPageState extends State<PolicyDetailPage> {
                     ),
                     onPressed: () {
                       if (_isLiked) {
-                        _removeLike(policy.plcyNm);
+                        _removeLike(policy.id);
                       } else {
-                        _addLike(policy.plcyNm);
+                        _addLike(policy.id);
                       }
                     },
                   ),
