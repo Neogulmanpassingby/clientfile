@@ -18,13 +18,61 @@ class _RecommendPageState extends State<RecommendPage> {
   bool _loading = false;
   bool _hasSearched = false;
   List<Map<String, dynamic>> _results = [];
+  int? _recommendCount; // ★ 1. 남은 추천 횟수를 저장할 변수 추가
+
+  // ★ 2. 페이지가 처음 로드될 때 실행되는 initState 추가
+  @override
+  void initState() {
+    super.initState();
+    // 위젯이 빌드되자마자 남은 횟수를 서버에서 가져옴
+    _fetchRecommendCount();
+  }
+
+  // ★ 3. 남은 추천 횟수를 가져오는 함수 추가
+  Future<void> _fetchRecommendCount() async {
+    try {
+      final token = await _storage.read(key: 'access_token');
+      // 이전 단계에서 만든 API 엔드포인트 호출
+      final uri = Uri.parse('$baseUrl/api/mypage/recommend');
+
+      final res = await http.get(
+        uri,
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        setState(() {
+          // 'recommendCount' 값을 변수에 저장
+          _recommendCount = data['recommendCount'];
+        });
+      } else {
+        // 에러 발생 시 횟수를 0으로 설정
+        setState(() => _recommendCount = 0);
+      }
+    } catch (e) {
+      // 예외 발생 시 횟수를 0으로 설정
+      setState(() => _recommendCount = 0);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('추천 횟수를 불러오는 데 실패했습니다.')),
+      );
+    }
+  }
 
   Future<void> _fetchRecommendations() async {
+    // ★ 4. 추천 받기 전, 횟수 확인 로직 추가
+    if (_recommendCount != null && _recommendCount! <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('추천 횟수를 모두 사용했습니다.')),
+      );
+      return; // 함수 실행 중단
+    }
+
     final prompt = _promptCtrl.text.trim();
     if (prompt.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('프롬프트를 입력하세요.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('프롬프트를 입력하세요.')),
+      );
       return;
     }
 
@@ -35,9 +83,8 @@ class _RecommendPageState extends State<RecommendPage> {
 
     try {
       final token = await _storage.read(key: 'access_token');
-      final uri = Uri.parse(
-        '$baseUrl/api/policies/recommend',
-      ).replace(queryParameters: {'prompt': prompt});
+      final uri = Uri.parse('$baseUrl/api/policies/recommend')
+          .replace(queryParameters: {'prompt': prompt});
 
       final res = await http.get(
         uri,
@@ -47,20 +94,34 @@ class _RecommendPageState extends State<RecommendPage> {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         final List<Map<String, dynamic>> parsed =
-            List<Map<String, dynamic>>.from(data['recommendations']);
-        setState(() => _results = parsed);
+        List<Map<String, dynamic>>.from(data['recommendations']);
+        setState(() {
+          _results = parsed;
+          // ★ 5. 추천 성공 시, 화면의 횟수를 1 감소시켜 즉시 반영
+          if (_recommendCount != null) {
+            _recommendCount = _recommendCount! - 1;
+          }
+        });
       } else {
-        throw Exception('추천 실패: ${res.statusCode}');
+        // 서버에서 429 Too Many Requests 같은 상태 코드를 보낼 경우 처리
+        if (res.statusCode == 429) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('추천 횟수를 초과했습니다.')),
+          );
+        } else {
+          throw Exception('추천 실패: ${res.statusCode}');
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.toString())));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     } finally {
       setState(() => _loading = false);
     }
   }
 
+  // ... _resultItem 위젯은 변경 없음 ...
   Widget _resultItem(Map<String, dynamic> policy) {
     final title = (policy['plcyNm'] ?? '정책명 없음').toString();
     final reason = (policy['reason'] ?? '').toString();
@@ -112,7 +173,7 @@ class _RecommendPageState extends State<RecommendPage> {
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           fontSize: 13,
-                          color: Colors.black.withValues(alpha: 0.75),
+                          color: Colors.black.withOpacity(0.75),
                           height: 1.4,
                         ),
                       ),
@@ -126,17 +187,17 @@ class _RecommendPageState extends State<RecommendPage> {
                             .take(6)
                             .map(
                               (b) => Chip(
-                                label: Text(b),
-                                backgroundColor: const Color(0xFFF1F3F5),
-                                labelStyle: const TextStyle(fontSize: 12),
-                                materialTapTargetSize:
-                                    MaterialTapTargetSize.shrinkWrap,
-                                visualDensity: const VisualDensity(
-                                  horizontal: -4,
-                                  vertical: -4,
-                                ),
-                              ),
-                            )
+                            label: Text(b),
+                            backgroundColor: const Color(0xFFF1F3F5),
+                            labelStyle: const TextStyle(fontSize: 12),
+                            materialTapTargetSize:
+                            MaterialTapTargetSize.shrinkWrap,
+                            visualDensity: const VisualDensity(
+                              horizontal: -4,
+                              vertical: -4,
+                            ),
+                          ),
+                        )
                             .toList(),
                       ),
                     ],
@@ -166,6 +227,7 @@ class _RecommendPageState extends State<RecommendPage> {
       ),
       body: Column(
         children: [
+          // ... TextField 부분은 변경 없음 ...
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Container(
@@ -205,25 +267,39 @@ class _RecommendPageState extends State<RecommendPage> {
                 onPressed: _loading ? null : _fetchRecommendations,
                 child: _loading
                     ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
                     : const Text(
-                        '추천 받기',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                  '추천 받기',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ),
           ),
           const SizedBox(height: 8),
+
+          // ★ 6. 남은 횟수 표시 위젯 추가
+          if (_recommendCount != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12.0),
+              child: Text(
+                '남은 추천 횟수: $_recommendCount회',
+                style: TextStyle(
+                  color: _recommendCount! > 0 ? Colors.blueGrey : Colors.red,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+
           Expanded(
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
