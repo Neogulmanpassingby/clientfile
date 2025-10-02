@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:animations/animations.dart';
-import 'RegisterPage/RegisterPage1.dart';
-import 'RegisterPage/RegisterPage2.dart';
-import 'RegisterPage/RegisterPage3.dart';
-import 'RegisterPage/RegisterPage4.dart';
-import 'RegisterPage/RegisterPage5.dart';
-import 'RegisterPage/RegisterPage6.dart';
-import 'RegisterPage/RegisterPage7.dart';
-import 'Success.dart';
+import '../widgets/step1_email.dart';
+import '../widgets/step2_nickname.dart';
+import '../widgets/step3_password.dart';
+import '../widgets/step4_birthdate.dart';
+import '../widgets/step5_income.dart';
+import '../widgets/step6_address.dart';
+import '../widgets/step7_survey.dart';
+import '../../../pages/Success.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 const String _defaultBaseUrl = 'http://43.201.25.220:80';

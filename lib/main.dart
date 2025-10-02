@@ -7,18 +7,20 @@ import 'pages/LoginPage.dart';
 import 'pages/Mainpage.dart';
 
 void main() async {
+  // 1. Flutter engine 초기화 보장
   WidgetsFlutterBinding.ensureInitialized();
-
+  // 2. 유효한 액세스 토큰 확인
   final token = await getValidAccessToken();
+  // 3. 토큰 유무에 따라 시작페이지 결정
   final Widget startPage = (token != null)
-      ? const MainPage() // 유효한 토큰 있으면 홈
-      : const OnboardingPage(); // 없으면 로그인
-
-  runApp(MyApp(startPage: startPage)); // 수정된 부분
+      ? const MainPage() // 토큰 있으면 : 메인페이지로
+      : const OnboardingPage(); // 토큰 없으면 : 온보딩 페이지로
+  // 4. 결정된 페이지를 시작점으로 앱 실행
+  runApp(MyApp(startPage: startPage));
 }
 
 class MyApp extends StatelessWidget {
-  final Widget startPage; // 추가된 필드
+  final Widget startPage;
   const MyApp({super.key, required this.startPage});
 
   static const Color primaryColor = Color(0xFF4263EB);

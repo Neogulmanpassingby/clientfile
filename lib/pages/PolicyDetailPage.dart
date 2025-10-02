@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'config.dart';
+import '../utils/config.dart';
 import 'PolicyReviewPage.dart';
 
 class PolicyDetailPage extends StatefulWidget {

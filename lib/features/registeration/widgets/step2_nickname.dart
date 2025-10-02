@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../config.dart'; // baseUrl 정의되어 있다고 가정 (ex. const baseUrl = ...);
+import '../../../utils/config.dart'; // baseUrl 정의되어 있다고 가정 (ex. const baseUrl = ...);
 
 class RegisterPage2 extends StatefulWidget {
   final void Function(String nickname) onNext;
@@ -18,7 +18,6 @@ class _RegisterPage2State extends State<RegisterPage2>
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
 
-  // 간단한 하드코딩 금칙어 (실서비스는 외부 리소스/정규화 권장)
   static const Set<String> _blacklist = {
     'fuck',
     'shit',

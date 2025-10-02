@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'LoginPage.dart';
-import 'RegisterFlow.dart'; // 변경: RegisterPage1 → RegisterFlow
+import '../features/registeration/view/RegisterFlow.dart'; // 변경: RegisterPage1 → RegisterFlow
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});

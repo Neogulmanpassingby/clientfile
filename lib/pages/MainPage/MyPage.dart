@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart'; // 날짜 포맷
 import 'EditPage.dart';
-import '../config.dart';
+import '../../utils/config.dart';
 import '../OnBoardingPage.dart';
 import '../MainPage.dart';
 import './InterestPoliciesPage.dart';

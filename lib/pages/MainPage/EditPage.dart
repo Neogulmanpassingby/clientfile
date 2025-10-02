@@ -6,7 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
-import '../config.dart';
+import '../../utils/config.dart';
 
 /// 개인정보 수정 페이지 (리팩토링 버전)
 /// --------------------------------------------------
