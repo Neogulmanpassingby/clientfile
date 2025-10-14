@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'LoginPage.dart';
-import '../features/registeration/view/RegisterFlow.dart'; // 변경: RegisterPage1 → RegisterFlow
+import 'package:go_router/go_router.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -73,13 +72,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () {
-                          // RegisterPage1이 아닌 RegisterFlow로 진입
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const RegisterFlow(),
-                            ),
-                          );
+                          context.go('/register');
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF4263EB),
@@ -109,14 +102,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginPage(),
-                              ),
-                            );
-                          },
+                            onTap: () => context.go('/login'),
                           child: const Text(
                             '로그인',
                             style: TextStyle(

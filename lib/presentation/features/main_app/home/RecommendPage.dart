@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../utils/config.dart';
-import '../PolicyDetailPage.dart';
+import '../../../../core/config.dart';
+import '../core/PolicyDetailPage.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../core/routes/app_router.dart';
 
 class RecommendPage extends StatefulWidget {
   const RecommendPage({super.key});
@@ -133,14 +135,13 @@ class _RecommendPageState extends State<RecommendPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PolicyDetailPage(policyId: policy['id']),
-            ),
-          );
-        },
+          onTap: () {
+            final id = policy['id'];
+            context.pushNamed(
+              'policyDetail',
+              pathParameters: {'id': '$id'},
+            );
+          },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(

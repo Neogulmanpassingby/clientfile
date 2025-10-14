@@ -3,11 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart'; // 날짜 포맷
-import 'EditPage.dart';
-import '../../utils/config.dart';
-import '../OnBoardingPage.dart';
-import '../MainPage.dart';
-import './InterestPoliciesPage.dart';
+import '../../../../core/config.dart';
+import 'package:go_router/go_router.dart';
 
 class MyPage extends StatefulWidget {
   const MyPage({super.key});
@@ -38,11 +35,7 @@ class _MyPageState extends State<MyPage> {
   Future<void> _logout() async {
     await _storage.delete(key: 'access_token');
     if (!mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const OnboardingPage()),
-      (route) => false,
-    );
+    context.go('/onboarding');
   }
 
   @override
@@ -51,10 +44,9 @@ class _MyPageState extends State<MyPage> {
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainPage()),
-        );
+        if (!context.mounted) return;
+        // 예: 마이페이지가 탭 2라면
+        context.go('/main?tab=2');
       },
       child: Scaffold(
         appBar: AppBar(
@@ -165,13 +157,10 @@ class _MyPageState extends State<MyPage> {
                         height: 50,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => const EditProfilePage(),
-                              ),
-                            );
+                            // go('/edit') 대신
+                            context.push('/edit');
                           },
+
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF4263EB),
                             foregroundColor: Colors.white,
@@ -213,12 +202,7 @@ class _MyPageState extends State<MyPage> {
                     ),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const InterestPoliciesPage(),
-                        ),
-                      );
+                      context.push('/likes');
                     },
                   ),
                 ),

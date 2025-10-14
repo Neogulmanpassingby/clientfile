@@ -2,9 +2,11 @@ import 'dart:io' show Platform;
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 
-import 'MainPage/HomePage.dart';
-import 'MainPage/SearchPage.dart';
-import 'MainPage/MyPage.dart';
+import 'home/HomePage.dart';
+import 'mypage/MyPage.dart';
+import 'search/SearchPage.dart';
+import 'package:go_router/go_router.dart';
+
 
 class MainPage extends StatefulWidget {
   final int initialIndex;
@@ -22,9 +24,20 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    // 라우트 변경을 UI에 반영 (URL → 탭)
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncFromUrl());
   }
 
-  // ✅ 탭 전환 시마다 "새 인스턴스"를 반환 (상태 유지 안 함)
+  void _syncFromUrl() {
+    final uri = GoRouterState.of(context).uri; // e.g., /main?tab=1
+    if (uri.path == '/main') {
+      final idx = int.tryParse(uri.queryParameters['tab'] ?? '0') ?? 0;
+      if (idx != _currentIndex && mounted) {
+        setState(() => _currentIndex = idx);
+      }
+    }
+  }
+
   Widget _buildCurrentPage() {
     switch (_currentIndex) {
       case 0:
@@ -37,6 +50,7 @@ class _MainPageState extends State<MainPage> {
         return const SizedBox.shrink();
     }
   }
+
 
   void _showExitSnackBar(BuildContext context, {String message = '한 번 더 뒤로가기를 누르면 앱이 종료됩니다', Duration duration = const Duration(seconds: 2)}) {
     final messenger = ScaffoldMessenger.of(context);
@@ -81,15 +95,21 @@ class _MainPageState extends State<MainPage> {
   }
 
   Future<bool> _onWillPop() async {
-    final rootNav = Navigator.of(context, rootNavigator: true);
+    final router = GoRouter.of(context);
 
-    // 상세 페이지 등 push된 라우트가 있으면 pop
-    if (rootNav.canPop()) {
-      rootNav.pop();
+    if (router.canPop()) {
+      router.pop();
       return false;
     }
 
-    // 홈 탭에서 2초 내 두 번 누르면 종료
+    // 홈 탭 아닐 때: 홈으로 이동(앱 종료 방지)
+    if (_currentIndex != 0) {
+      setState(() => _currentIndex = 0);
+      context.go('/main?tab=0');
+      return false;
+    }
+
+    // 홈 탭에서만 '한번 더 누르면 종료'
     final now = DateTime.now();
     if (_lastBackPressed == null ||
         now.difference(_lastBackPressed!) > const Duration(seconds: 2)) {
@@ -107,6 +127,8 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    _syncFromUrl();
+
     return WillPopScope(
       onWillPop: _onWillPop,
       child: Scaffold(
@@ -123,7 +145,11 @@ class _MainPageState extends State<MainPage> {
         ),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
-          onTap: (i) => setState(() => _currentIndex = i),
+          onTap: (i) {
+            if (i == _currentIndex) return;
+            setState(() => _currentIndex = i);
+            context.go('/main?tab=$i'); // URL 동기화
+          },
           showUnselectedLabels: true,
           items: const [
             BottomNavigationBarItem(
@@ -142,7 +168,7 @@ class _MainPageState extends State<MainPage> {
             ),
           ],
         ),
-      ),
+    ),
     );
   }
 }

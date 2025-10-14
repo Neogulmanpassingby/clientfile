@@ -6,14 +6,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
-import '../../utils/config.dart';
+import '../../../../core/config.dart';
 
-/// 개인정보 수정 페이지 (리팩토링 버전)
-/// --------------------------------------------------
-/// * 닉네임 중복 검사 시 흔들림 애니메이션 + 빨간 에러 텍스트
-/// * 불필요한 중복 메서드 제거
-/// * `birthDate` 저장 로직 실제 선택값 반영
-/// * 가독성을 위해 일부 위젯 빌더 메서드 분리
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
 

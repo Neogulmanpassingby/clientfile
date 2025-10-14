@@ -2,9 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../utils/config.dart';
-import 'RecommendPage.dart';
-import '../PolicyDetailPage.dart';
+import '../../../../core/config.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -106,10 +105,7 @@ class _HomePageState extends State<HomePage> {
               title: '나를 위한 맞춤 정책',
               subtitle: '프롬프트를 입력해 맞춤 추천 받기',
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const RecommendPage()),
-                );
+                context.pushNamed('recommend');
               },
             ),
           ],
@@ -153,12 +149,8 @@ class _PolicySection extends StatelessWidget {
             (policy) => InkWell(
               borderRadius: BorderRadius.circular(8),
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => PolicyDetailPage(policyId: policy['id']),
-                  ),
-                );
+                final id = policy['id'].toString();
+                context.pushNamed('policyDetail', pathParameters: {'id': id});
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),

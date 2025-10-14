@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../utils/config.dart';
-import '../PolicyDetailPage.dart';
+import '../../../../core/config.dart';
+import '../core/PolicyDetailPage.dart';
 
 class InterestPoliciesPage extends StatefulWidget {
   const InterestPoliciesPage({super.key});

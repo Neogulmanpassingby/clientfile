@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../../../utils/config.dart'; // baseUrl 정의되어 있다고 가정 (ex. const baseUrl = ...);
+import 'package:cleanarea/core/config.dart'; // baseUrl 정의되어 있다고 가정 (ex. const baseUrl = ...);
 
 class RegisterPage2 extends StatefulWidget {
   final void Function(String nickname) onNext;

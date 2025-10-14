@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
-import 'Mainpage.dart'; // 추가: MainPage import
+import '../main_app/Mainpage.dart'; // 추가: MainPage import
+import 'package:go_router/go_router.dart';
 
 class ClapAnimationPage extends StatelessWidget {
   final int mode; // 0 = Sign‑Up, 1 = Login
@@ -24,10 +25,7 @@ class ClapAnimationPage extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         onTap: () {
           // 탭하면 MainPage로 대체(Nav stack 리셋)
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const MainPage(initialIndex: 0)),
-                (Route<dynamic> route) => false,
-          );
+          context.go('/main');
         },
         child: SafeArea(
           child: Center(

@@ -2,8 +2,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'Success.dart';
-import '../utils/config.dart';
+import '../../../core/config.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/routes/app_router.dart' show ClapArgs;
 
 // 환경변수 우선, 없으면 config.dart의 baseUrl 사용
 const String apiBase = String.fromEnvironment(
@@ -206,11 +207,9 @@ class _LoginPageState extends State<LoginPage> {
         await _storage.write(key: 'user_nickname', value: nickname);
 
         if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ClapAnimationPage(mode: 1, nickname: nickname),
-          ),
+        context.go(
+          '/celebrate',
+          extra: ClapArgs(mode: 1, nickname: nickname), // ← 위에서 정의한 타입
         );
       } else if (resp.statusCode == 401) {
         _emailFieldKey.currentState?.shake();

@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shimmer/shimmer.dart';
-import '../../utils/config.dart';
-import '../PolicyDetailPage.dart';
+import 'package:cleanarea/core/config.dart';
 import '../MainPage.dart';
+import 'package:go_router/go_router.dart';
 
 final String apiBase = const String.fromEnvironment(
   'API_BASE',
@@ -222,11 +222,10 @@ class _SearchPageState extends State<SearchPage> {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => PolicyDetailPage(policyId: policy['id']),
-            ),
+          final id = policy['id'];
+          context.pushNamed(
+            'policyDetail',
+            pathParameters: {'id': '$id'},
           );
         },
         child: Container(

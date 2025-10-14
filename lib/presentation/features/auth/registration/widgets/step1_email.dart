@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
-import '../../../utils/config.dart';
+import 'package:cleanarea/core/config.dart';
 
 class RegisterPage1 extends StatefulWidget {
   final void Function(String email) onNext;

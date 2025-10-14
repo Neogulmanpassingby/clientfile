@@ -1,10 +1,13 @@
+//메인페이지 --
+
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../utils/config.dart';
+import '../../../../core/config.dart';
 import 'PolicyReviewPage.dart';
+import 'package:go_router/go_router.dart';
 
 class PolicyDetailPage extends StatefulWidget {
   final int policyId;

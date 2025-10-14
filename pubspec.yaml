@@ -1,5 +1,5 @@
-name: untitled1
-description: "A new Flutter project."
+name: cleanarea
+description: "LLM based policy recommend platform."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -30,6 +30,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  provider: ^6.1.5
   url_launcher: ^6.2.1
   flutter_localizations:
     sdk: flutter
@@ -45,7 +46,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   flutter_native_splash: ^2.4.6
   flutter_launcher_icons: ^0.14.4
-
+  go_router: ^16.2.4
 dev_dependencies:
   flutter_test:
     sdk: flutter

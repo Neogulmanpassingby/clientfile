@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'config.dart';
+import '../config.dart';
 
 final _storage = const FlutterSecureStorage();
 const String apiBase = String.fromEnvironment('API_BASE', defaultValue: baseUrl);
