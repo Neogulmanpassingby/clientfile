@@ -118,16 +118,30 @@ class _MyPageState extends State<MyPage> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: TextButton(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: ElevatedButton.icon(
                           onPressed: _logout,
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            padding: EdgeInsets.zero,
-                            minimumSize: const Size(0, 30),
+                          icon: const Icon(Icons.logout, size: 16, color: Colors.white),
+                          label: const Text(
+                            '로그아웃',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.5,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            foregroundColor: Colors.white,
+                            elevation: 4, // ✨ 은은한 그림자 (토스 느낌)
+                            shadowColor: Colors.redAccent.withOpacity(0.4), // 그림자 색감 살짝
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            minimumSize: const Size(0, 30), // 높이 조정
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10), // ✅ 둥글게
+                            ),
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          child: const Text('로그아웃'),
                         ),
                       ),
                     ],
