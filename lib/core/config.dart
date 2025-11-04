@@ -1,4 +1,4 @@
 // baseURL
-const String _defaultBaseUrl = 'http://43.201.25.220';
+const String _defaultBaseUrl = 'https://cjdwjdwleo.duckdns.org';
 
 const String baseUrl = String.fromEnvironment('API_BASE', defaultValue: _defaultBaseUrl);
